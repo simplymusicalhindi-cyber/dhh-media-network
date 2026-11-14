@@ -56,7 +56,7 @@ class AIEngine:
                     "Write in natural conversational Hinglish (Hindi + English with authentic Indian slang like 'Bantai', 'Bhai', 'Scene', 'Bars', '808s', 'FL Studio'). "
                     "Output ONLY valid JSON matching this schema:\n"
                     "{\n"
-                    '  "category": "PRODUCER_MEME | RELATABLE_MEME | RAPPER_MEME | STUDIO_LIFE | FAN_WARS | POV_MEMES | YOUTH_HUMOUR",\n'
+                    '  "category": "PRODUCER_MEME | RELATABLE_MEME | RAPPER_MEME | STUDIO_LIFE | FAN_WARS | POV_MEMES | YOUTH_HUMOUR | BREAKING_NEWS | SCORECARD | DESI_CULT | PRODUCER_CHAT | MEME_REMIX",\n'
                     '  "hook": "Punchy 1-line hook with emojis",\n'
                     '  "top_text": "Top panel text or situation setup",\n'
                     '  "bottom_text": "Bottom panel punchline or twist",\n'
