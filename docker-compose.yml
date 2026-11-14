@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  dhh-media-network:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dhh_media_autonomous
+    restart: always
+    ports:
+      - "8787:8787"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8787
+      - TIMEZONE=Asia/Kolkata
+      - INSTAGRAM_MOCK_MODE=True
+      - META_APP_ID=${META_APP_ID:-}
+      - META_APP_SECRET=${META_APP_SECRET:-}
+      - INSTAGRAM_ACCOUNT_ID=${INSTAGRAM_ACCOUNT_ID:-}
+      - ACCESS_TOKEN=${ACCESS_TOKEN:-}
+      - DAILY_IMAGE_POSTS_TARGET=10
+      - DAILY_REELS_TARGET=5
+      - DAILY_STORIES_TARGET=1
+      - AUTO_PUBLISH_ENABLED=True
+    volumes:
+      - ./backend/data:/app/backend/data

@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: dhh-media-network
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health/status
