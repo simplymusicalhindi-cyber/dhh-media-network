@@ -216,6 +216,21 @@ class MemeEngine:
                 if p.exists():
                     resolved_photo_path = str(p)
                     detected_caption = detected_caption or "PRESS PHOTO: Emiway Bantai during independent album launch. (DHH ARCHIVE)"
+            elif "raftaar" in full_check or "kalamkaar" in full_check or "raa" in full_check:
+                p = artists_dir / "raftaar.jpg"
+                if p.exists():
+                    resolved_photo_path = str(p)
+                    detected_caption = detected_caption or "PRESS PHOTO: Raftaar discussing DHH scene developments. (DHH ARCHIVE)"
+            elif "prabh" in full_check or "tilak nagar" in full_check:
+                p = artists_dir / "prabh_deep.jpg"
+                if p.exists():
+                    resolved_photo_path = str(p)
+                    detected_caption = detected_caption or "PRESS PHOTO: Prabh Deep headlining live showcase in Delhi. (DHH ARCHIVE)"
+            elif "brodha" in full_check or "bengaluru" in full_check:
+                p = artists_dir / "brodha_v.jpg"
+                if p.exists():
+                    resolved_photo_path = str(p)
+                    detected_caption = detected_caption or "PRESS PHOTO: Brodha V representing South Indian lyricism. (DHH ARCHIVE)"
 
         if resolved_photo_path and Path(resolved_photo_path).exists():
             try:
