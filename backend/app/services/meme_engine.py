@@ -1118,6 +1118,93 @@ class MemeEngine:
             "template": "DRAKE_REACTION"
         }
 
+    def create_imgflip_card_meme(
+        self,
+        template_name: str,
+        header_text: str,
+        overlays: Optional[list] = None,
+        punchline: Optional[str] = None,
+        dark_mode: bool = False,
+        source_tag: str = "@azpadhai"
+    ) -> Dict[str, Any]:
+        """Render a viral Instagram card meme using official Imgflip templates (1080x1080)."""
+        from PIL import ImageOps
+        width, height = 1080, 1080
+        bg_color = "#0F172A" if dark_mode else "#FFFFFF"
+        text_color = "#F8FAFC" if dark_mode else "#0F172A"
+        sub_color = "#94A3B8" if dark_mode else "#64748B"
+        border_color = "#334155" if dark_mode else "#E2E8F0"
+
+        canvas = Image.new("RGB", (width, height), color=bg_color)
+        draw = ImageDraw.Draw(canvas)
+
+        # 1. Top Bar with Profile Info
+        font_handle = self._get_font(26, bold=True)
+        font_sub = self._get_font(22)
+        # Avatar
+        draw.ellipse([45, 30, 95, 80], fill="#7C3AED")
+        draw.text((70, 52), "DHH", font=self._get_font(22, bold=True), fill="#FFFFFF", anchor="mm")
+        draw.text((110, 42), "Desi Hip-Hop Cult", font=font_handle, fill=text_color)
+        draw.text((370, 44), "✓", font=font_handle, fill="#0284C7")
+        draw.text((110, 72), f"{source_tag} • Verified DHH Meme Radar", font=font_sub, fill=sub_color)
+
+        # 2. Header / Joke Setup
+        font_head = self._get_font(38, bold=True)
+        lines = self._wrap_text(header_text, draw, font_head, 990)
+        hy = 115
+        for l in lines:
+            draw.text((45, hy), l, font=font_head, fill=text_color)
+            hy += 50
+
+        # 3. Imgflip Template Placement
+        imgflip_dir = settings.DATA_DIR / "media" / "imgflip"
+        tpl_path = imgflip_dir / f"{template_name}.jpg"
+        if not tpl_path.exists():
+            tpl_path = imgflip_dir / f"{template_name}.png"
+
+        if tpl_path.exists():
+            with Image.open(tpl_path) as t_img:
+                rem_y = hy + 20
+                rem_h = height - rem_y - 45
+                fitted = ImageOps.fit(t_img, (width - 90, rem_h), method=Image.Resampling.LANCZOS)
+                
+                # Draw border and paste
+                draw.rectangle([43, rem_y - 2, 45 + width - 90 + 2, rem_y + rem_h + 2], outline=border_color, width=2)
+                canvas.paste(fitted, (45, rem_y))
+
+                # 4. Draw Overlay Text labels on the template
+                if overlays:
+                    draw_ov = ImageDraw.Draw(canvas)
+                    font_ov = self._get_font(28, bold=True)
+                    for ov in overlays:
+                        ox = int(45 + (width - 90) * ov["x_pct"])
+                        oy = int(rem_y + rem_h * ov["y_pct"])
+                        otext = ov["text"]
+                        
+                        bbox = draw_ov.textbbox((ox, oy), otext, font=font_ov, anchor="mm")
+                        pad = 12
+                        pill_bbox = [bbox[0] - pad, bbox[1] - pad + 2, bbox[2] + pad, bbox[3] + pad - 2]
+                        box_c = ov.get("box_color", "#1E293B")
+                        txt_c = ov.get("text_color", "#FFFFFF")
+                        draw_ov.rounded_rectangle(pill_bbox, radius=10, fill=box_c, outline="#FFFFFF", width=2)
+                        draw_ov.text((ox, oy), otext, font=font_ov, fill=txt_c, anchor="mm")
+
+        # Bottom watermark line
+        draw.text((width - 55, height - 25), f"instagram.com/{source_tag.lstrip('@')}", font=self._get_font(18, bold=True), fill=sub_color, anchor="ra")
+
+        file_id = f"imgflip_{template_name}_{uuid.uuid4().hex[:8]}.png"
+        file_path = self.output_dir / file_id
+        canvas.save(str(file_path), "PNG", quality=95)
+
+        return {
+            "file_name": file_id,
+            "file_path": str(file_path),
+            "width": width,
+            "height": height,
+            "format": "PNG",
+            "template": f"IMGFLIP_{template_name.upper()}"
+        }
+
     def create_human_meme(
         self,
         hook: str,
