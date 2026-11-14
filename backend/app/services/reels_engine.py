@@ -164,9 +164,9 @@ class ReelsEngine:
             draw.text((100, hy), l, font=font_title, fill="#E2E8F0")
             hy += 55
 
-        # Branding
+        # Branding (Clean, no handle watermarks)
         font_brand = self._get_font(32, bold=True)
-        draw.text((width // 2 - 170, feed_safe_top + 720), "⚡ @desihiphop_vibes", font=font_brand, fill="#A5B4FC")
+        draw.text((width // 2, feed_safe_top + 720), "⚡ DESI HIP HOP REELS", font=font_brand, fill="#A5B4FC", anchor="mm")
 
         cover_id = f"cover_{uuid.uuid4().hex[:10]}.png"
         cover_path = self.cover_dir / cover_id
@@ -326,6 +326,91 @@ class ReelsEngine:
             "width": 1080,
             "height": 1920,
             "file_size": output_video_path.stat().st_size
+        }
+
+    def create_templatesays_reel(
+        self,
+        template_name: str,
+        meme_text: str,
+        custom_out_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Renders a high-engagement 9:16 vertical Reel meme from an authentic @templatesays
+        video clip, overlaying a clean modern setup card while preserving audio and motion.
+        """
+        templates_dir = settings.DATA_DIR / "media" / "reel_templates"
+        tpl_path = templates_dir / template_name
+        if not tpl_path.exists():
+            candidates = list(templates_dir.glob(f"*{template_name}*"))
+            if candidates:
+                tpl_path = candidates[0]
+            else:
+                raise FileNotFoundError(f"Template video '{template_name}' not found in {templates_dir}")
+
+        out_name = custom_out_name or f"reel_meme_{uuid.uuid4().hex[:10]}.mp4"
+        out_path = self.output_dir / out_name
+        target_w = 720
+        
+        # Locate ffmpeg
+        custom_ffmpeg = Path("C:/Users/rusha/.faceless-shorts/bin/ffmpeg.exe")
+        ffmpeg_exe = str(custom_ffmpeg) if custom_ffmpeg.exists() else "ffmpeg"
+
+        # Generate text card overlay
+        overlay_png = self.output_dir / f"temp_ov_{uuid.uuid4().hex[:8]}.png"
+        card_margin = 35
+        card_w = target_w - (card_margin * 2)
+        
+        dummy = Image.new("RGBA", (100, 100))
+        d_draw = ImageDraw.Draw(dummy)
+        font = self._get_font(38, bold=True)
+        lines = self._wrap_text(meme_text, d_draw, font, card_w - 60)
+        
+        line_h = 48
+        card_h = max(130, len(lines) * line_h + 50)
+        overlay = Image.new("RGBA", (target_w, card_h + 30), color=(0, 0, 0, 0))
+        draw = ImageDraw.Draw(overlay)
+        
+        draw.rounded_rectangle([card_margin + 3, 14, target_w - card_margin + 3, card_h + 14], radius=22, fill=(0, 0, 0, 140))
+        draw.rounded_rectangle([card_margin, 10, target_w - card_margin, card_h + 10], radius=22, fill=(255, 255, 255, 245), outline=(226, 232, 240, 255), width=2)
+        
+        cy = 28
+        for line in lines:
+            draw.text((target_w // 2, cy + line_h // 2), line, font=font, fill=(15, 23, 42, 255), anchor="mm")
+            cy += line_h
+        overlay.save(str(overlay_png), "PNG")
+
+        filter_complex = f"[0:v]scale={target_w}:-2[v0];[v0][1:v]overlay=0:110[outv]"
+        cmd = [
+            ffmpeg_exe,
+            "-y",
+            "-i", str(tpl_path),
+            "-i", str(overlay_png),
+            "-filter_complex", filter_complex,
+            "-map", "[outv]",
+            "-map", "0:a?",
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-crf", "22",
+            "-c:a", "aac",
+            "-b:a", "128k",
+            "-movflags", "+faststart",
+            str(out_path)
+        ]
+        
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if overlay_png.exists():
+            overlay_png.unlink()
+            
+        if res.returncode != 0:
+            raise RuntimeError(f"FFmpeg error: {res.stderr}")
+
+        return {
+            "reel_id": out_name.replace(".mp4", ""),
+            "video_path": str(out_path),
+            "template": tpl_path.name,
+            "aspect_ratio": "9:16",
+            "file_size": out_path.stat().st_size,
+            "format": "MP4"
         }
 
 reels_engine = ReelsEngine()
