@@ -96,10 +96,12 @@ class MemeEngine:
         subtext: str,
         story_body: Optional[str] = None,
         witness_quote: Optional[str] = None,
-        edition_tag: str = "DELHI / MUMBAI PRESS ARCHIVE",
-        source_tag: str = "@azpadhai"
+        edition_tag: str = "DELHI / MUMBAI PRESS CLIPPING",
+        source_tag: str = "@azpadhai",
+        source_image_path: Optional[str] = None,
+        photo_caption: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Render an ultra-realistic vintage/print newspaper clipping meme (1080x1080)."""
+        """Render an ultra-realistic vintage/print newspaper clipping meme with real source photos (1080x1080)."""
         width, height = 1080, 1080
         # Dark studio desk surface
         img = Image.new("RGB", (width, height), color="#16171B")
@@ -179,18 +181,71 @@ class MemeEngine:
         # Press Photo Box
         img_box_y = hy + 82
         box_h = 240
-        draw.rectangle([px1 + 30, img_box_y, px2 - 30, img_box_y + box_h], fill="#1E2024", outline="#4B5563", width=2)
+        box_w = px2 - px1 - 60
 
-        # Graphic inside photo box (Studio mic / audio monitor motif)
-        draw.ellipse([width // 2 - 60, img_box_y + 35, width // 2 + 60, img_box_y + 155], fill="#2D3139", outline="#60A5FA", width=3)
-        font_mic = self._get_serif_font(48, bold=True)
-        draw.text((width // 2, img_box_y + 90), "🎙️", font=font_mic, fill="#FFFFFF", anchor="mm")
-        font_box_tag = self._get_serif_font(22, bold=True)
-        draw.text((width // 2, img_box_y + 180), "[ SCENE EVIDENCE: RECORDING BOOTH ARCHIVE ]", font=font_box_tag, fill="#FBBF24", anchor="mm")
+        # Automatic real source photo embedding
+        photo_placed = False
+        resolved_photo_path = source_image_path
+        detected_caption = photo_caption
+
+        if not resolved_photo_path or not Path(resolved_photo_path).exists():
+            full_check = f"{headline} {subtext} {story_body or ''}".lower()
+            artists_dir = settings.DATA_DIR / "media" / "artists"
+            if "seedhe maut" in full_check or "tbsm" in full_check or "calm" in full_check or "encore" in full_check:
+                p = artists_dir / "seedhe_maut.jpg"
+                if p.exists():
+                    resolved_photo_path = str(p)
+                    detected_caption = detected_caption or "PRESS PHOTO: Seedhe Maut performing live at packed arena in Delhi NCR. (DHH ARCHIVE)"
+            elif "hanumankind" in full_check or "kalmi" in full_check or "big dawgs" in full_check:
+                p = artists_dir / "hanumankind.jpg"
+                if p.exists():
+                    resolved_photo_path = str(p)
+                    detected_caption = detected_caption or "PRESS PHOTO: Hanumankind during international festival headline tour. (DHH ARCHIVE)"
+            elif "divine" in full_check or "gully gang" in full_check or "59" in full_check:
+                p = artists_dir / "divine.jpg"
+                if p.exists():
+                    resolved_photo_path = str(p)
+                    detected_caption = detected_caption or "PRESS PHOTO: DIVINE representing Mumbai 59 street rap movement. (DHH ARCHIVE)"
+            elif "stan" in full_check or "p-town" in full_check:
+                p = artists_dir / "mc_stan.jpg"
+                if p.exists():
+                    resolved_photo_path = str(p)
+                    detected_caption = detected_caption or "PRESS PHOTO: MC Stan performing P-Town 808 trap anthems. (DHH ARCHIVE)"
+            elif "emiway" in full_check or "bantai" in full_check:
+                p = artists_dir / "emiway.jpg"
+                if p.exists():
+                    resolved_photo_path = str(p)
+                    detected_caption = detected_caption or "PRESS PHOTO: Emiway Bantai during independent album launch. (DHH ARCHIVE)"
+
+        if resolved_photo_path and Path(resolved_photo_path).exists():
+            try:
+                from PIL import ImageOps, ImageEnhance
+                with Image.open(resolved_photo_path) as p_img:
+                    fitted = ImageOps.fit(p_img, (box_w, box_h), method=Image.Resampling.LANCZOS, centering=(0.5, 0.3))
+                    # Authentic newsprint print photo treatment
+                    enhancer = ImageEnhance.Color(fitted)
+                    vintage = enhancer.enhance(0.75)
+                    contrast = ImageEnhance.Contrast(vintage)
+                    final_photo = contrast.enhance(1.2)
+                    img.paste(final_photo, (px1 + 30, img_box_y))
+                    draw.rectangle([px1 + 30, img_box_y, px2 - 30, img_box_y + box_h], outline="#2B2825", width=2)
+                    photo_placed = True
+            except Exception:
+                photo_placed = False
+
+        if not photo_placed:
+            # Fallback graphic inside photo box
+            draw.rectangle([px1 + 30, img_box_y, px2 - 30, img_box_y + box_h], fill="#1E2024", outline="#4B5563", width=2)
+            draw.ellipse([width // 2 - 60, img_box_y + 35, width // 2 + 60, img_box_y + 155], fill="#2D3139", outline="#60A5FA", width=3)
+            font_mic = self._get_serif_font(48, bold=True)
+            draw.text((width // 2, img_box_y + 90), "🎙️", font=font_mic, fill="#FFFFFF", anchor="mm")
+            font_box_tag = self._get_serif_font(22, bold=True)
+            draw.text((width // 2, img_box_y + 180), "[ SCENE EVIDENCE: RECORDING BOOTH ARCHIVE ]", font=font_box_tag, fill="#FBBF24", anchor="mm")
 
         # Photo Caption
+        caption_text = detected_caption or "FILE PHOTO: Certified DHH live performance archive. (PRESS BUREAU)"
         font_cap = self._get_serif_font(18, italic=True)
-        draw.text((px1 + 35, img_box_y + box_h + 8), "FILE PHOTO: Underground studio monitor displaying 18 audio stems at 4:15 AM. (PRESS ARCHIVE)", font=font_cap, fill="#57534E")
+        draw.text((px1 + 35, img_box_y + box_h + 8), caption_text, font=font_cap, fill="#57534E")
 
         # Two Columns Newspaper Layout
         col_y = img_box_y + box_h + 38
