@@ -56,6 +56,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+@app.get("/health")
+@app.get("/healthz")
+def root_health():
+    return {"status": "ok", "service": "dhh-media-network"}
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
