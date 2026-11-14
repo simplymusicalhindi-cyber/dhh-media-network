@@ -19,7 +19,10 @@ from backend.app.services.reliability_engine import reliability_engine
 
 class SchedulerEngine:
     def __init__(self):
-        self.scheduler = BackgroundScheduler(timezone=settings.TIMEZONE)
+        try:
+            self.scheduler = BackgroundScheduler(timezone=settings.TIMEZONE)
+        except Exception:
+            self.scheduler = BackgroundScheduler(timezone="UTC")
         self.is_running = False
         self.daily_image_target = settings.DAILY_IMAGE_POSTS_TARGET
         self.daily_reels_target = settings.DAILY_REELS_TARGET
