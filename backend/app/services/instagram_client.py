@@ -51,7 +51,7 @@ class InstagramAPIClient:
                 "success": True,
                 "mode": "MOCK_SIMULATION" if self.mock_mode else "UNCONFIGURED_MOCK",
                 "account_id": acc_id or "mock_dhh_1784140001",
-                "username": "desihiphop_vibes",
+                "username": "Dhh_media_network",
                 "account_type": "BUSINESS",
                 "profile_picture_url": "https://picsum.photos/seed/dhh/200/200",
                 "followers_count": 14250,
@@ -325,14 +325,25 @@ class InstagramAPIClient:
                     return {"success": False, "error": res.json().get("error", {})}
                 container_id = res.json().get("id")
 
+                # Wait for Meta servers to download & encode the story image
+                import asyncio
+                await asyncio.sleep(4)
+
                 pub_res = await client.post(f"{self.GRAPH_URL}/{self.ig_account_id}/media_publish", data={
                     "creation_id": container_id,
                     "access_token": self.access_token
                 })
+                if pub_res.status_code != 200:
+                    return {"success": False, "error": pub_res.json().get("error", {})}
+                
+                post_id = pub_res.json().get("id")
                 return {
                     "success": True,
-                    "post_id": pub_res.json().get("id"),
-                    "status": "PUBLISHED"
+                    "post_id": post_id,
+                    "container_id": container_id,
+                    "media_type": "STORIES",
+                    "status": "PUBLISHED",
+                    "published_at": datetime.utcnow().isoformat()
                 }
         except Exception as e:
             return {"success": False, "error": str(e)}
