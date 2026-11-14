@@ -63,22 +63,53 @@ class ResearchEngine:
     ]
 
     def fetch_live_public_dhh_news(self) -> List[Dict[str, Any]]:
-        """Fetch real-time DHH news from public Google News RSS feeds with zero API keys."""
-        query_url = (
-            "https://news.google.com/rss/search?q="
-            "desi+hip+hop+OR+seedhe+maut+OR+krsna+OR+hanumankind"
-            "&hl=en-IN&gl=IN&ceid=IN:en"
-        )
+        """Fetch real-time DHH news with real source pictures from verified Indian hip-hop journals & feeds."""
         results = []
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) DHHNewsBot/1.0"}
+
+        # 1. Fetch from The Indian Music Diaries (Has direct real news pictures)
         try:
-            req = urllib.request.Request(
-                query_url,
-                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) DHHNewsBot/1.0"}
+            req = urllib.request.Request("https://theindianmusicdiaries.com/feed/", headers=headers)
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                tree = ET.fromstring(resp.read())
+                items = tree.findall(".//item")
+                for it in items[:6]:
+                    title = it.find("title").text if it.find("title") is not None else ""
+                    link = it.find("link").text if it.find("link") is not None else ""
+                    pub_date = it.find("pubDate").text if it.find("pubDate") is not None else ""
+                    
+                    # Extract real news pic from description or content
+                    img_url = None
+                    for child in it:
+                        if child.text and "<img" in child.text:
+                            m = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', child.text)
+                            if m:
+                                img_url = m.group(1)
+                                break
+                    
+                    if title:
+                        results.append({
+                            "title": title.strip(),
+                            "link": link,
+                            "pub_date": pub_date,
+                            "real_image_url": img_url,
+                            "source": "THE_INDIAN_MUSIC_DIARIES"
+                        })
+        except Exception:
+            pass
+
+        # 2. Fetch from Google News DHH Feed
+        try:
+            query_url = (
+                "https://news.google.com/rss/search?q="
+                "desi+hip+hop+OR+seedhe+maut+OR+krsna+OR+hanumankind"
+                "&hl=en-IN&gl=IN&ceid=IN:en"
             )
+            req = urllib.request.Request(query_url, headers=headers)
             with urllib.request.urlopen(req, timeout=5) as resp:
                 tree = ET.fromstring(resp.read())
                 items = tree.findall(".//item")
-                for it in items[:10]:
+                for it in items[:6]:
                     raw_title = it.find("title").text if it.find("title") is not None else ""
                     clean_title = re.sub(r"\s*-\s*[^-]+$", "", raw_title).strip()
                     link = it.find("link").text if it.find("link") is not None else ""
@@ -89,10 +120,12 @@ class ResearchEngine:
                             "title": clean_title,
                             "link": link,
                             "pub_date": pub_date,
+                            "real_image_url": None,
                             "source": "GOOGLE_NEWS_DHH"
                         })
         except Exception:
-            pass  # Fallback gracefully to curated seeds if network is offline
+            pass
+
         return results
 
     def seed_initial_topics(self, db: Session):
