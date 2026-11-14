@@ -2,6 +2,7 @@ import hmac
 import hashlib
 import uuid
 import time
+from pathlib import Path
 import httpx
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
@@ -21,6 +22,24 @@ class InstagramAPIClient:
         self.ig_account_id = settings.INSTAGRAM_ACCOUNT_ID
         self.app_id = settings.META_APP_ID
         self.app_secret = settings.META_APP_SECRET
+
+    def _resolve_public_url(self, path_or_url: str, default_folder: str = "memes") -> str:
+        """Converts local file paths into publicly accessible URLs for Meta Graph API."""
+        if not path_or_url:
+            return ""
+        if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
+            return path_or_url
+        filename = Path(path_or_url).name
+        base = settings.PUBLIC_MEDIA_URL_BASE.rstrip("/")
+        if "reels" in path_or_url or filename.endswith(".mp4"):
+            subfolder = "reels"
+        elif "stories" in path_or_url:
+            subfolder = "stories"
+        elif "covers" in path_or_url:
+            subfolder = "covers"
+        else:
+            subfolder = "memes"
+        return f"{base}/{subfolder}/{filename}"
 
     async def verify_connection(self, access_token: Optional[str] = None, ig_account_id: Optional[str] = None) -> Dict[str, Any]:
         """Test Instagram account connectivity and verify granted permissions."""
@@ -120,10 +139,11 @@ class InstagramAPIClient:
 
         try:
             async with httpx.AsyncClient(timeout=20.0) as client:
+                resolved_url = self._resolve_public_url(image_url, "memes")
                 # Step 1: Create Media Container
                 create_url = f"{self.GRAPH_URL}/{self.ig_account_id}/media"
                 payload = {
-                    "image_url": image_url,
+                    "image_url": resolved_url,
                     "caption": caption,
                     "access_token": self.access_token
                 }
@@ -219,16 +239,18 @@ class InstagramAPIClient:
 
         try:
             async with httpx.AsyncClient(timeout=45.0) as client:
+                resolved_video = self._resolve_public_url(video_url, "reels")
+                resolved_cover = self._resolve_public_url(cover_url, "covers") if cover_url else None
                 # 1. Create Reels Container
                 payload = {
                     "media_type": "REELS",
-                    "video_url": video_url,
+                    "video_url": resolved_video,
                     "caption": caption,
                     "share_to_feed": "true",
                     "access_token": self.access_token
                 }
-                if cover_url:
-                    payload["cover_url"] = cover_url
+                if resolved_cover:
+                    payload["cover_url"] = resolved_cover
 
                 res = await client.post(f"{self.GRAPH_URL}/{self.ig_account_id}/media", data=payload)
                 if res.status_code != 200:
@@ -272,9 +294,10 @@ class InstagramAPIClient:
 
         try:
             async with httpx.AsyncClient(timeout=20.0) as client:
+                resolved_story = self._resolve_public_url(image_url, "stories")
                 payload = {
                     "media_type": "STORIES",
-                    "image_url": image_url,
+                    "image_url": resolved_story,
                     "access_token": self.access_token
                 }
                 res = await client.post(f"{self.GRAPH_URL}/{self.ig_account_id}/media", data=payload)
