@@ -1,0 +1,14 @@
+name: 24-7 Keep-Alive Monitor
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep_alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping DHH Media Network Cloud Service
+        run: |
+          curl -sS -f -m 15 https://dhh-media-network.onrender.com/api/health/status || true
