@@ -116,6 +116,51 @@ DHH_MEME_PRESETS = [
         "punchline": "Independent grind hits different when the vision is real.",
         "caption": "Raw talent > Corporate marketing budget any day of the week 🔥 Tag your favorite independent DHH artist who deserves millions of streams! 🚀\n\n#IndependentArtist #DHH #UndergroundIndia",
         "tags": ["independentartist", "musicvideo", "diy", "gullyrap"]
+    },
+    {
+        "category": "BREAKING_NEWS",
+        "hook": "Seedhe Maut Teases Surprise Underground Mixtape Tonight 🚨",
+        "top_text": "Delhi hip-hop scene in absolute frenzy after cryptic midnight Instagram stories.",
+        "bottom_text": "Studio engineers report 18 tracks recorded in 72 hours with blown-out 808s.",
+        "punchline": "TBSM fans canceling all plans for the next 48 hours 💀",
+        "caption": "When TBSM drops, sleep is strictly optional in Delhi NCR 😂🔊 Tag your concert partner! #SeedheMaut #TBSM #DHHBreakingNews #DelhiHipHop",
+        "tags": ["seedhemaut", "tbsm", "breakingnews", "dhhradar", "delhirap"]
+    },
+    {
+        "category": "SCORECARD",
+        "hook": "Track Audit: Hanumankind x Kalmi - 'Big Dawgs'",
+        "top_text": "Flow & Rhyme Schemes: 9.8/10 • 808 Bass: 10/10 • Car Speaker Survival: 10/10",
+        "bottom_text": "Final Verdict: GLOBAL ANTHEM 🏆\nUnapologetic raw energy taking Indian rap worldwide.",
+        "punchline": "The Well of Death was just a metaphor for producer Kalmi's bassline.",
+        "caption": "Official Track Audit 📊 Hanumankind and Kalmi set a benchmark that echoes from Bengaluru to Rolling Loud 🚀 Do you agree with this score? Drop your rating below! 👇 #Hanumankind #BigDawgs #DHHScorecard #TrackAudit",
+        "tags": ["hanumankind", "bigdawgs", "scorecard", "dhhreview", "kalmi"]
+    },
+    {
+        "category": "DESI_CULT",
+        "hook": "When rapper explains his 64-bar rhyme scheme",
+        "top_text": "Rapper: 'Maine 4-syllable internal rhymes mein quantum physics aur Greek mythology reference kari hai.'",
+        "bottom_text": "Babu Bhaiya: 'Arey khopdi tod saale ka! Ek line samajh mein nahi aayi lekin vibe poori hard hai!'",
+        "punchline": "Lyrical miracle listeners nodding without understanding 90% of the metaphors 💀",
+        "caption": "Babu Bhaiya speaks for 80% of DHH listeners during speed rap tracks 😂🔥 Tag that friend who claims they decoded every single bar! #DesiCult #HeraPheriMemes #DHHMemes #KR$NA #LyricalRap",
+        "tags": ["desicult", "babubhaiya", "herapheri", "dhhcomedy", "krsna"]
+    },
+    {
+        "category": "PRODUCER_CHAT",
+        "hook": "The 4 AM Producer-Rapper DM Exchange 📱",
+        "top_text": "Rapper: 'Bhai beat export ho gayi? Aaj raat vocal record karni hai.'\nProducer: 'Haan bhai bas 2 min.'",
+        "bottom_text": "Producer 3 hours later: 'Bhai FL Studio crash ho gaya aur backup corrupt hai 💀'",
+        "punchline": "Every studio friendship has survived this exact text conversation.",
+        "caption": "Sound engineers and beatmakers looking at FL Studio crash logs like 🗿💔 Respect your producers bhai, exposure doesn't fix corrupt project files! #ProducerLife #FLStudio #AudioEngineer #DHHBeats",
+        "tags": ["producerlife", "flstudio", "studiochat", "dhhmemes", "beatmaker"]
+    },
+    {
+        "category": "MEME_REMIX",
+        "hook": "Underground Gatekeeping vs 2026 Reality ⚡",
+        "top_text": "Underground rap fans in 2020: 'Bhai agar million views cross ho gaye toh artist sellout ho gaya.'",
+        "bottom_text": "Fans in 2026: Blasting bilingual underground trap at full volume during family weddings and college fests.",
+        "punchline": "DHH conquered the entire culture and the scene is only getting bigger.",
+        "caption": "From underground cyphers in Delhi and Mumbai alleys to ruling national airwaves 🔥 The evolution of Desi Hip-Hop is unmatched! Which era of DHH do you love the most? #DHHRemix #SceneEvolution #IndianHipHop #UndergroundToMainstream",
+        "tags": ["remix", "dhhhistory", "undergroundrap", "desirap", "azpadhai"]
     }
 ]
 
