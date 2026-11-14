@@ -29,7 +29,7 @@ class BioProfileRecommendation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username_suggestion = Column(String(100), default="dhh_bars_daily")
-    display_name = Column(String(150), default="Desi Hip Hop Cult | DHH Memes & Culture")
+    display_name = Column(String(150), default="DHH Media Network | Desi Hip Hop News & Memes")
     bio_text = Column(Text, default="⚡ The raw heartbeat of Indian Hip-Hop.\n🎤 Relatable memes, producer pain & underground bars.\n👇 Drop your heat in DMs!")
     category_tag = Column(String(100), default="Musician/Band / Media News")
     call_to_action = Column(String(200), default="Stream underground DHH tracks via link below")
