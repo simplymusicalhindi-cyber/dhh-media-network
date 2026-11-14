@@ -232,6 +232,15 @@ class MemeEngine:
                     resolved_photo_path = str(p)
                     detected_caption = detected_caption or "PRESS PHOTO: Brodha V representing South Indian lyricism. (DHH ARCHIVE)"
 
+            if not resolved_photo_path:
+                try:
+                    from backend.app.services.image_fetcher import image_fetcher
+                    resolved_photo_path = image_fetcher.get_real_news_image(headline=headline)
+                    if resolved_photo_path:
+                        detected_caption = detected_caption or f"PRESS PHOTO: Live event documentation for '{headline[:35]}...'"
+                except Exception:
+                    pass
+
         if resolved_photo_path and Path(resolved_photo_path).exists():
             try:
                 from PIL import ImageOps, ImageEnhance
@@ -1114,7 +1123,9 @@ class MemeEngine:
         hook: str,
         content_text: str,
         punchline: Optional[str] = None,
-        category: str = "DHH_MEME"
+        category: str = "DHH_MEME",
+        source_image_path: Optional[str] = None,
+        photo_caption: Optional[str] = None
     ) -> Dict[str, Any]:
         """Dynamically select and render an authentic visual meme template instead of plain AI text cards."""
         cat_lower = category.lower()
@@ -1126,7 +1137,9 @@ class MemeEngine:
                 subtext=parts[0] if parts else content_text,
                 story_body=parts[1] if len(parts) > 1 else content_text,
                 witness_quote=punchline,
-                edition_tag="DELHI / MUMBAI PRESS ARCHIVE"
+                edition_tag="DELHI / MUMBAI PRESS CLIPPING",
+                source_image_path=source_image_path,
+                photo_caption=photo_caption
             )
         elif "scorecard" in cat_lower or "review" in cat_lower or "audit" in cat_lower or "critic" in cat_lower:
             track = hook.replace("Track Review:", "").replace("Audit:", "").strip()
