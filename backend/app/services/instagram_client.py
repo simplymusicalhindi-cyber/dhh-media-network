@@ -125,6 +125,13 @@ class InstagramAPIClient:
 
     async def publish_image_post(self, image_url: str, caption: str) -> Dict[str, Any]:
         """Publish a single image post to Instagram."""
+        return await self._publish_image_internal(image_url, caption)
+
+    async def publish_image(self, image_url: str, caption: str) -> Dict[str, Any]:
+        """Alias for publish_image_post."""
+        return await self._publish_image_internal(image_url, caption)
+
+    async def _publish_image_internal(self, image_url: str, caption: str) -> Dict[str, Any]:
         if self.mock_mode or not self.access_token:
             mock_id = f"1789{int(time.time())}{uuid.uuid4().hex[:4]}"
             return {
