@@ -152,7 +152,9 @@ class InstagramAPIClient:
                     return {"success": False, "error": res.json().get("error", {})}
                 container_id = res.json().get("id")
 
-                # Step 2: Publish Container
+                # Step 2: Publish Container (Wait 4s for Meta CDN to fetch & encode)
+                import asyncio
+                await asyncio.sleep(4)
                 publish_url = f"{self.GRAPH_URL}/{self.ig_account_id}/media_publish"
                 pub_payload = {
                     "creation_id": container_id,
@@ -163,10 +165,21 @@ class InstagramAPIClient:
                     return {"success": False, "error": pub_res.json().get("error", {})}
                 
                 post_id = pub_res.json().get("id")
+
+                # Fetch real permalink from Graph API
+                permalink = ""
+                try:
+                    p_res = await client.get(f"{self.GRAPH_URL}/{post_id}?fields=permalink&access_token={self.access_token}")
+                    if p_res.status_code == 200:
+                        permalink = p_res.json().get("permalink", "")
+                except Exception:
+                    pass
+
                 return {
                     "success": True,
                     "post_id": post_id,
                     "container_id": container_id,
+                    "permalink": permalink,
                     "status": "PUBLISHED",
                     "published_at": datetime.utcnow().isoformat()
                 }
