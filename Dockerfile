@@ -1,8 +1,9 @@
 FROM python:3.11-slim
 
-# Install system dependencies: FFmpeg and fonts for Pillow typography
+# Install system dependencies: FFmpeg, tzdata, and fonts for Pillow typography
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    tzdata \
     fonts-dejavu-core \
     fonts-freefont-ttf \
     curl \
