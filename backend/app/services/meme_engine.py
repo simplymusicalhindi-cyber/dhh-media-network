@@ -97,7 +97,7 @@ class MemeEngine:
         story_body: Optional[str] = None,
         witness_quote: Optional[str] = None,
         edition_tag: str = "DELHI / MUMBAI PRESS CLIPPING",
-        source_tag: str = "@azpadhai",
+        source_tag: str = "",
         source_image_path: Optional[str] = None,
         photo_caption: Optional[str] = None
     ) -> Dict[str, Any]:
@@ -175,7 +175,7 @@ class MemeEngine:
         draw.text((px1 + 35, hy + 8), s_lines[0] if s_lines else subtext, font=font_sub, fill="#333333")
 
         # Byline
-        draw.text((px1 + 35, hy + 42), "BY SPECIAL CORRESPONDENT IN DELHI • DHH CULTURAL DESK", font=self._get_serif_font(18, bold=True), fill="#78716C")
+        draw.text((px1 + 35, hy + 42), "BY SPECIAL CORRESPONDENT IN DELHI • DHH MUSIC DESK", font=self._get_serif_font(18, bold=True), fill="#78716C")
         draw.line([(px1 + 30, hy + 72), (px2 - 30, hy + 72)], fill="#1A1A1A", width=1)
 
         # Press Photo Box
@@ -306,7 +306,7 @@ class MemeEngine:
             draw.line([(bx, height - 95), (bx, height - 55)], fill="#1A1A1A", width=bw)
         font_barcode = self._get_serif_font(14)
         draw.text((px1 + 195, height - 75), "ARCHIVE NO: DHH-2026-X9 • VERIFIED CLIPPING", font=font_barcode, fill="#57534E")
-        draw.text((px2 - 35, height - 75), f"PRESERVED & CURATED BY {source_tag}", font=self._get_serif_font(18, bold=True), fill="#111111", anchor="ra")
+        draw.text((px2 - 35, height - 75), "SPECIAL PRESS EDITION • PRESS BUREAU", font=self._get_serif_font(18, bold=True), fill="#111111", anchor="ra")
 
         file_id = f"newspaper_{uuid.uuid4().hex[:10]}.png"
         file_path = self.output_dir / file_id
@@ -327,7 +327,7 @@ class MemeEngine:
         subtext: str,
         news_tag: str = "DHH RADAR",
         breaking_ticker: Optional[str] = None,
-        source_tag: str = "@azpadhai"
+        source_tag: str = ""
     ) -> Dict[str, Any]:
         """Render a high-impact 'Breaking News / Rap Radar Alert' meme card (1080x1080)."""
         width, height = 1080, 1080
@@ -351,7 +351,7 @@ class MemeEngine:
         # Live Indicator & Tag
         font_subhead = self._get_font(22, bold=True)
         draw.text((430, 45), f"● LIVE INTEL • {news_tag.upper()}", font=font_subhead, fill="#EF4444")
-        draw.text((width - 50, 42), source_tag, font=font_pill, fill="#94A3B8", anchor="ra")
+        draw.text((width - 50, 42), "VERIFIED REPORT", font=font_pill, fill="#94A3B8", anchor="ra")
 
         # 3. Central Broadcast Visual Frame (1000x580)
         card_x1, card_y1, card_x2, card_y2 = 40, 130, width - 40, 720
@@ -422,7 +422,7 @@ class MemeEngine:
         scores: Optional[Dict[str, float]] = None,
         verdict: str = "CERTIFIED BANGER 🏆",
         commentary: str = "Bars, cadence and 808 distortion perfectly engineered.",
-        source_tag: str = "@azpadhai"
+        source_tag: str = ""
     ) -> Dict[str, Any]:
         """Render an official DHH Music Critic Scorecard & Track Audit meme (1080x1080)."""
         width, height = 1080, 1080
@@ -440,7 +440,7 @@ class MemeEngine:
         font_tag = self._get_font(20, bold=True)
         draw.rounded_rectangle([70, 60, 380, 95], radius=8, fill="#0284C7")
         draw.text((225, 70), "DHH TRACK AUDIT & CRITIC", font=font_tag, fill="#FFFFFF", anchor="mm")
-        draw.text((width - 70, 70), source_tag, font=font_tag, fill="#9CA3AF", anchor="ra")
+        draw.text((width - 70, 70), "VERIFIED METRIC", font=font_tag, fill="#9CA3AF", anchor="ra")
 
         font_track = self._get_font(42, bold=True)
         draw.text((70, 115), f'"{track_title}"', font=font_track, fill="#F8FAFC")
@@ -507,7 +507,7 @@ class MemeEngine:
         draw.rounded_rectangle([40, 880, width - 40, 1025], radius=16, fill="#111827")
         font_cta = self._get_font(28, bold=True)
         draw.text((width // 2, 925), "Do you agree with this rating? Drop your score below 👇", font=font_cta, fill="#FFFFFF", anchor="mm")
-        draw.text((width // 2, 975), f"Follow {source_tag} for daily honest DHH track breakdowns", font=self._get_font(24), fill="#94A3B8", anchor="mm")
+        draw.text((width // 2, 975), "Official community scorecard & analytical track breakdown", font=self._get_font(24), fill="#94A3B8", anchor="mm")
 
         file_id = f"score_{uuid.uuid4().hex[:10]}.png"
         file_path = self.output_dir / file_id
@@ -528,17 +528,17 @@ class MemeEngine:
         punchline: str,
         cult_character: str = "BABU_BHAIYA",
         dialogue: Optional[str] = None,
-        source_tag: str = "@azpadhai"
+        source_tag: str = ""
     ) -> Dict[str, Any]:
-        """Render a classic Bollywood/Desi Cult reaction meme adapted for DHH (1080x1080)."""
+        """Render a classic Bollywood reaction meme adapted for DHH (1080x1080)."""
         width, height = 1080, 1080
         img = Image.new("RGB", (width, height), color="#0F172A")
         draw = ImageDraw.Draw(img)
 
         # Header Bar
         draw.rectangle([0, 0, width, 100], fill="#020617")
-        draw.text((50, 32), "🎬 DESI CULT CLASSIC • DHH MEME", font=self._get_font(32, bold=True), fill="#FBBF24")
-        draw.text((width - 50, 32), source_tag, font=self._get_font(28, bold=True), fill="#94A3B8", anchor="ra")
+        draw.text((50, 32), "🎬 BOLLYWOOD x DHH • SCENE REACTION", font=self._get_font(32, bold=True), fill="#FBBF24")
+        draw.text((width - 50, 32), "DHH MEME", font=self._get_font(28, bold=True), fill="#94A3B8", anchor="ra")
 
         # Top Panel: Situation / Expectation
         top_y1, top_y2 = 130, 480
@@ -614,7 +614,7 @@ class MemeEngine:
         sender_name: str,
         messages: list[dict],
         punchline: str,
-        source_tag: str = "@azpadhai"
+        source_tag: str = ""
     ) -> Dict[str, Any]:
         """Render a realistic Dark Mode DM conversation meme (1080x1080)."""
         width, height = 1080, 1080
@@ -681,7 +681,7 @@ class MemeEngine:
         draw.rounded_rectangle([40, p_y1, width - 40, height - 40], radius=18, fill="#1E1B4B", outline="#A855F7", width=2)
         font_p = self._get_font(30, bold=True)
         draw.text((width // 2, p_y1 + 42), f"💀 {punchline}", font=font_p, fill="#FACC15", anchor="mm")
-        draw.text((width // 2, p_y1 + 84), f"Follow {source_tag} for authentic DHH culture & memes", font=self._get_font(24), fill="#E2E8F0", anchor="mm")
+        draw.text((width // 2, p_y1 + 84), "Real studio conversations in the Desi Rap underground", font=self._get_font(24), fill="#E2E8F0", anchor="mm")
 
         file_id = f"dm_{uuid.uuid4().hex[:10]}.png"
         file_path = self.output_dir / file_id
@@ -702,9 +702,9 @@ class MemeEngine:
         original_meme_text: str,
         fresh_spin: str,
         punchline: str,
-        source_tag: str = "@azpadhai"
+        source_tag: str = ""
     ) -> Dict[str, Any]:
-        """Render a remixed & regenerated community meme with @azpadhai visual branding (1080x1080)."""
+        """Render a remixed & regenerated community meme (1080x1080)."""
         width, height = 1080, 1080
         img = Image.new("RGB", (width, height), color="#0F172A")
         draw = ImageDraw.Draw(img)
@@ -712,7 +712,7 @@ class MemeEngine:
         # Header Bar
         draw.rectangle([0, 0, width, 110], fill="#020617")
         draw.text((50, 35), "⚡ COMMUNITY MEME REMIX • DHH 2026", font=self._get_font(32, bold=True), fill="#38BDF8")
-        draw.text((width - 50, 35), source_tag, font=self._get_font(28, bold=True), fill="#94A3B8", anchor="ra")
+        draw.text((width - 50, 35), "COMMUNITY PERSPECTIVE", font=self._get_font(28, bold=True), fill="#94A3B8", anchor="ra")
 
         # Topic Badge
         draw.rounded_rectangle([50, 130, 520, 180], radius=12, fill="#7C3AED")
@@ -745,7 +745,7 @@ class MemeEngine:
         draw.rectangle([0, 895, width, height], fill="#020617")
         font_p = self._get_font(32, bold=True)
         draw.text((width // 2, 940), f"🔥 {punchline}", font=font_p, fill="#FACC15", anchor="mm")
-        draw.text((width // 2, 985), f"Regenerated & Curated by {source_tag} • Desi Hip-Hop Media", font=self._get_font(24), fill="#94A3B8", anchor="mm")
+        draw.text((width // 2, 985), "Desi Hip-Hop Scene Reality • 2026 Perspective", font=self._get_font(24), fill="#94A3B8", anchor="mm")
 
         file_id = f"remix_{uuid.uuid4().hex[:10]}.png"
         file_path = self.output_dir / file_id
@@ -795,11 +795,11 @@ class MemeEngine:
         # Profile Name and Handle
         font_name = self._get_font(36, bold=True)
         font_handle = self._get_font(28)
-        draw.text((190, 100), "Desi Hip Hop Cult", font=font_name, fill="#F8FAFC")
+        draw.text((190, 100), "DHH Daily", font=font_name, fill="#F8FAFC")
         
         # Verified Badge
-        draw.text((510, 102), "✓", font=font_name, fill="#38BDF8")
-        draw.text((190, 145), "@azpadhai • 1h ago", font=font_handle, fill="#94A3B8")
+        draw.text((365, 102), "✓", font=font_name, fill="#38BDF8")
+        draw.text((190, 145), "@dhh_daily • 1h ago", font=font_handle, fill="#94A3B8")
 
         # Category pill badge
         font_badge = self._get_font(22, bold=True)
@@ -849,7 +849,7 @@ class MemeEngine:
         draw.line([(card_margin + 30, footer_y - 20), (width - card_margin - 30, footer_y - 20)], fill="#334155", width=2)
         font_footer = self._get_font(26)
         draw.text((card_margin + 50, footer_y), "💬 1.2K   🔁 4.8K   ❤️ 28.4K   📌 DHH Scene", font=font_footer, fill="#94A3B8")
-        draw.text((width - card_margin - 240, footer_y), "instagram.com", font=font_footer, fill="#64748B")
+        draw.text((width - card_margin - 200, footer_y), "Community Post", font=font_footer, fill="#64748B")
 
         file_id = f"meme_{uuid.uuid4().hex[:10]}.png"
         file_path = self.output_dir / file_id
@@ -945,7 +945,7 @@ class MemeEngine:
         font_sub = self._get_font(24, bold=True)
         draw.text((width // 2, 50), "PLAYING FROM PLAYLIST", font=font_sub, fill="#8E8E93", anchor="mm")
         font_header = self._get_font(28, bold=True)
-        draw.text((width // 2, 85), "Desi Hip-Hop Bangers • DHH Cult", font=font_header, fill="#FFFFFF", anchor="mm")
+        draw.text((width // 2, 85), "Desi Hip-Hop Bangers • Heavyweight Tracks", font=font_header, fill="#FFFFFF", anchor="mm")
 
         # 3. Album Art Card (420x420) with drop shadow and vinyl peek
         card_x, card_y, card_w = 330, 130, 420
@@ -1046,7 +1046,7 @@ class MemeEngine:
         # Header Bar
         draw.rectangle([0, 0, width, 100], fill="#020617")
         draw.text((50, 32), f"🔥 DESI HIP-HOP REALITY • {category.upper()}", font=self._get_font(32, bold=True), fill="#38BDF8")
-        draw.text((width - 60, 32), "@azpadhai", font=self._get_font(28, bold=True), fill="#94A3B8", anchor="ra")
+        draw.text((width - 60, 32), "VERIFIED MEME", font=self._get_font(28, bold=True), fill="#94A3B8", anchor="ra")
 
         panel_w = 400
         panel_h = 450
@@ -1124,39 +1124,27 @@ class MemeEngine:
         header_text: str,
         overlays: Optional[list] = None,
         punchline: Optional[str] = None,
-        dark_mode: bool = False,
-        source_tag: str = "@azpadhai"
+        dark_mode: bool = False
     ) -> Dict[str, Any]:
-        """Render a viral Instagram card meme using official Imgflip templates (1080x1080)."""
+        """Render a clean, unbranded viral internet card meme using official Imgflip templates (1080x1080)."""
         from PIL import ImageOps
         width, height = 1080, 1080
         bg_color = "#0F172A" if dark_mode else "#FFFFFF"
         text_color = "#F8FAFC" if dark_mode else "#0F172A"
-        sub_color = "#94A3B8" if dark_mode else "#64748B"
         border_color = "#334155" if dark_mode else "#E2E8F0"
 
         canvas = Image.new("RGB", (width, height), color=bg_color)
         draw = ImageDraw.Draw(canvas)
 
-        # 1. Top Bar with Profile Info
-        font_handle = self._get_font(26, bold=True)
-        font_sub = self._get_font(22)
-        # Avatar
-        draw.ellipse([45, 30, 95, 80], fill="#7C3AED")
-        draw.text((70, 52), "DHH", font=self._get_font(22, bold=True), fill="#FFFFFF", anchor="mm")
-        draw.text((110, 42), "Desi Hip-Hop Cult", font=font_handle, fill=text_color)
-        draw.text((370, 44), "✓", font=font_handle, fill="#0284C7")
-        draw.text((110, 72), f"{source_tag} • Verified DHH Meme Radar", font=font_sub, fill=sub_color)
-
-        # 2. Header / Joke Setup
-        font_head = self._get_font(38, bold=True)
-        lines = self._wrap_text(header_text, draw, font_head, 990)
-        hy = 115
+        # 1. Clean, punchy meme setup text at top (No fake profile bar, No watermarks)
+        font_head = self._get_font(42, bold=True)
+        lines = self._wrap_text(header_text, draw, font_head, 980)
+        hy = 55
         for l in lines:
-            draw.text((45, hy), l, font=font_head, fill=text_color)
-            hy += 50
+            draw.text((50, hy), l, font=font_head, fill=text_color)
+            hy += 55
 
-        # 3. Imgflip Template Placement
+        # 2. Imgflip Template Placement
         imgflip_dir = settings.DATA_DIR / "media" / "imgflip"
         tpl_path = imgflip_dir / f"{template_name}.jpg"
         if not tpl_path.exists():
@@ -1164,33 +1152,30 @@ class MemeEngine:
 
         if tpl_path.exists():
             with Image.open(tpl_path) as t_img:
-                rem_y = hy + 20
+                rem_y = hy + 25
                 rem_h = height - rem_y - 45
-                fitted = ImageOps.fit(t_img, (width - 90, rem_h), method=Image.Resampling.LANCZOS)
+                fitted = ImageOps.fit(t_img, (width - 100, rem_h), method=Image.Resampling.LANCZOS)
                 
-                # Draw border and paste
-                draw.rectangle([43, rem_y - 2, 45 + width - 90 + 2, rem_y + rem_h + 2], outline=border_color, width=2)
-                canvas.paste(fitted, (45, rem_y))
+                # Draw subtle border and paste
+                draw.rectangle([48, rem_y - 2, 50 + width - 100 + 2, rem_y + rem_h + 2], outline=border_color, width=2)
+                canvas.paste(fitted, (50, rem_y))
 
-                # 4. Draw Overlay Text labels on the template
+                # 3. Draw Overlay Text labels on the template
                 if overlays:
                     draw_ov = ImageDraw.Draw(canvas)
-                    font_ov = self._get_font(28, bold=True)
+                    font_ov = self._get_font(30, bold=True)
                     for ov in overlays:
-                        ox = int(45 + (width - 90) * ov["x_pct"])
+                        ox = int(50 + (width - 100) * ov["x_pct"])
                         oy = int(rem_y + rem_h * ov["y_pct"])
                         otext = ov["text"]
                         
                         bbox = draw_ov.textbbox((ox, oy), otext, font=font_ov, anchor="mm")
-                        pad = 12
+                        pad = 14
                         pill_bbox = [bbox[0] - pad, bbox[1] - pad + 2, bbox[2] + pad, bbox[3] + pad - 2]
                         box_c = ov.get("box_color", "#1E293B")
                         txt_c = ov.get("text_color", "#FFFFFF")
-                        draw_ov.rounded_rectangle(pill_bbox, radius=10, fill=box_c, outline="#FFFFFF", width=2)
+                        draw_ov.rounded_rectangle(pill_bbox, radius=12, fill=box_c, outline="#FFFFFF", width=3)
                         draw_ov.text((ox, oy), otext, font=font_ov, fill=txt_c, anchor="mm")
-
-        # Bottom watermark line
-        draw.text((width - 55, height - 25), f"instagram.com/{source_tag.lstrip('@')}", font=self._get_font(18, bold=True), fill=sub_color, anchor="ra")
 
         file_id = f"imgflip_{template_name}_{uuid.uuid4().hex[:8]}.png"
         file_path = self.output_dir / file_id
@@ -1268,14 +1253,14 @@ class MemeEngine:
                 topic=hook[:30],
                 original_meme_text=parts[0] if parts else hook,
                 fresh_spin=parts[1] if len(parts) > 1 else "The 2026 scene reality hits even harder.",
-                punchline=punchline or "Regenerated for @azpadhai audience"
+                punchline=punchline or "Scene reality in 2026"
             )
         elif "release" in cat_lower or "track" in cat_lower or "spotify" in cat_lower:
             lyrics = parts[0] if parts else content_text
             p_line = punchline or (parts[1] if len(parts) > 1 else "Every single time in DHH 💀")
             return self.create_spotify_player_meme(
                 song_title=hook[:40],
-                artist="Desi Hip-Hop Cult • Verified Banger",
+                artist="Desi Hip-Hop • Verified Banger",
                 lyrics_quote=lyrics[:140],
                 punchline=p_line[:100]
             )
