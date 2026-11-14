@@ -5,7 +5,7 @@ import uvicorn
 
 if __name__ == "__main__":
     try:
-        port = int(os.getenv("PORT", 8787))
+        port = int(os.getenv("PORT", 10000))
         host = os.getenv("HOST", "0.0.0.0")
         print(f"Starting DHH Autonomous Media Network on {host}:{port}...", flush=True)
         uvicorn.run("backend.app.main:app", host=host, port=port, reload=False)
