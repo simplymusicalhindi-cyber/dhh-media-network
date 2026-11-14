@@ -48,7 +48,7 @@ class SEOEngine:
         return [
             {
                 "username_suggestion": "desihiphop_vibes",
-                "display_name": "Desi Hip Hop Cult | DHH Culture & Memes",
+                "display_name": "DHH Media Network | Desi Hip Hop News & Memes",
                 "bio_text": "⚡ The unfiltered heartbeat of Indian Hip-Hop.\n🎤 Relatable memes, producer pain & underground bars.\n🎧 Daily DHH breakdowns & underground spotlights.\n👇 Stream fresh heat & join the community!",
                 "category": "Musician/Band / Media News Company",
                 "cta": "Submit your music / memes via DM",
