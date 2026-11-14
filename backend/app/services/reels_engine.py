@@ -276,7 +276,8 @@ class ReelsEngine:
                 f.write(f"file '{clean_path}'\n")
                 f.write(f"duration {s_dur}\n")
             # Last file must be repeated for ffmpeg concat demuxer
-            f.write(f"file '{slide_paths[-1][0].replace('\\', '/')}'\n")
+            last_slide_clean = slide_paths[-1][0].replace("\\", "/")
+            f.write(f"file '{last_slide_clean}'\n")
 
         # 4. Synthesize royalty-free DHH trap beat
         audio_file = self.ensure_dhh_beat_audio(int(total_duration) + 1)
