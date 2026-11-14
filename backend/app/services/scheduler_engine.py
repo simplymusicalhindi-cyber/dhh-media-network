@@ -16,6 +16,7 @@ from backend.app.services.story_engine import story_engine
 from backend.app.services.seo_engine import seo_engine
 from backend.app.services.instagram_client import instagram_client
 from backend.app.services.reliability_engine import reliability_engine
+from backend.app.services.review_engine import review_engine
 
 class SchedulerEngine:
     def __init__(self):
@@ -80,8 +81,8 @@ class SchedulerEngine:
         """Autonomously research, create visual, optimize SEO, and store a DHH meme post."""
         idea_dict = await ai_engine.generate_meme_idea(category=category)
 
-        # Render visual using MemeEngine
-        layout = meme_engine.create_tweet_card_meme(
+        # Render visual using authentic human visual meme templates
+        layout = meme_engine.create_human_meme(
             hook=idea_dict["hook"],
             content_text=f"{idea_dict['top_text']}\n\n{idea_dict['bottom_text']}",
             punchline=idea_dict.get("punchline"),
@@ -92,8 +93,16 @@ class SchedulerEngine:
         seo_res = seo_engine.generate_optimized_caption(
             hook=idea_dict["hook"],
             body=f"{idea_dict['top_text']}\n{idea_dict['bottom_text']}\n{idea_dict.get('punchline', '')}",
-            cta="Tag that one friend who relates 💀👇 Follow @desihiphop_vibes for daily DHH culture!",
+            cta="Tag that one friend who relates 💀👇 Follow @azpadhai for daily DHH culture!",
             category=idea_dict["category"]
+        )
+
+        # Pre-publish human-grade quality review
+        review = review_engine.review_content(
+            title=idea_dict["hook"],
+            text=f"{idea_dict['top_text']} {idea_dict['bottom_text']} {idea_dict.get('punchline', '')}",
+            media_path=layout["file_path"],
+            content_type="IMAGE"
         )
 
         content = GeneratedContent(
@@ -104,7 +113,7 @@ class SchedulerEngine:
             alt_text=idea_dict.get("alt_text", "Desi Hip-Hop meme"),
             seo_score=seo_res["seo_score"],
             media_path=layout["file_path"],
-            quality_score=idea_dict.get("quality_score", 8.8),
+            quality_score=review["overall_score"],
             status="READY",
             created_at=datetime.datetime.utcnow()
         )
