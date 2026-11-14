@@ -35,6 +35,36 @@ class MemeEngine:
         except Exception:
             return None
 
+    def _get_serif_font(self, size: int, bold: bool = False, italic: bool = False):
+        """Safely load authentic newspaper serif fonts (Georgia, Times New Roman, DejaVuSerif)."""
+        names = []
+        if bold and italic:
+            names = ["georgiaz.ttf", "timesbi.ttf"]
+        elif bold:
+            names = ["georgiab.ttf", "timesbd.ttf", "arialbd.ttf"]
+        elif italic:
+            names = ["georgiai.ttf", "timesi.ttf", "ariali.ttf"]
+        else:
+            names = ["georgia.ttf", "times.ttf", "arial.ttf"]
+        
+        font_paths = [
+            Path("C:/Windows/Fonts") / n for n in names
+        ] + [
+            Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
+            Path("/usr/share/fonts/truetype/freefont/FreeSerifBold.ttf" if bold else "/usr/share/fonts/truetype/freefont/FreeSerif.ttf"),
+            Path("/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf")
+        ]
+        for p in font_paths:
+            try:
+                if p.exists():
+                    return ImageFont.truetype(str(p), size)
+            except Exception:
+                continue
+        try:
+            return ImageFont.load_default()
+        except Exception:
+            return None
+
     def _wrap_text(self, text: str, draw: ImageDraw.Draw, font, max_width: int) -> list[str]:
         """Wrap text into lines that fit within max_width."""
         lines = []
@@ -59,6 +89,158 @@ class MemeEngine:
             if current_line:
                 lines.append(" ".join(current_line))
         return lines
+
+    def create_newspaper_cutting_meme(
+        self,
+        headline: str,
+        subtext: str,
+        story_body: Optional[str] = None,
+        witness_quote: Optional[str] = None,
+        edition_tag: str = "DELHI / MUMBAI PRESS ARCHIVE",
+        source_tag: str = "@azpadhai"
+    ) -> Dict[str, Any]:
+        """Render an ultra-realistic vintage/print newspaper clipping meme (1080x1080)."""
+        width, height = 1080, 1080
+        # Dark studio desk surface
+        img = Image.new("RGB", (width, height), color="#16171B")
+        draw = ImageDraw.Draw(img)
+
+        # Desk wood/slate grain lines
+        for y in range(0, height, 4):
+            draw.line([(0, y), (width, y)], fill="#191A20", width=1)
+
+        # Paper Drop Shadow
+        px1, py1, px2, py2 = 50, 40, width - 50, height - 40
+        draw.rectangle([px1 + 10, py1 + 14, px2 + 10, py2 + 14], fill="#0A0A0C")
+
+        # Newsprint paper base
+        draw.rectangle([px1, py1, px2, py2], fill="#F4EFEA")
+
+        # Newsprint subtle aging fibers
+        for y in range(py1 + 2, py2 - 2, 6):
+            draw.line([(px1, y), (px2, y)], fill="#ECE5DD", width=1)
+
+        # Masking tape on top-left and top-right corners
+        draw.rectangle([px1 + 30, py1 - 10, px1 + 140, py1 + 25], fill="#D6C8AC")
+        draw.rectangle([px2 - 140, py1 - 10, px2 - 30, py1 + 25], fill="#D6C8AC")
+
+        # Scissor cutout dashed line at top
+        font_cut = self._get_serif_font(16)
+        draw.text(
+            (width // 2, py1 + 12),
+            "- - - - - - - - - - - - - - - - [ ✂ CLIPPED FROM DESI RAP PRESS ARCHIVES ] - - - - - - - - - - - - - - - -",
+            font=font_cut,
+            fill="#8C827A",
+            anchor="mm"
+        )
+
+        # Newspaper Masthead
+        font_top = self._get_serif_font(18, bold=True)
+        draw.text((width // 2, py1 + 42), "★ THE OFFICIAL DESI HIP-HOP CHRONICLE ★", font=font_top, fill="#2B2825", anchor="mm")
+
+        font_mast = self._get_serif_font(56, bold=True)
+        draw.text((width // 2, py1 + 90), "THE DHH DISPATCH", font=font_mast, fill="#111111", anchor="mm")
+
+        # Double black divider rules
+        draw.line([(px1 + 30, py1 + 130), (px2 - 30, py1 + 130)], fill="#1A1A1A", width=3)
+        draw.line([(px1 + 30, py1 + 136), (px2 - 30, py1 + 136)], fill="#1A1A1A", width=1)
+
+        # Dateline / Issue info
+        font_info = self._get_serif_font(18, bold=True)
+        draw.text((px1 + 35, py1 + 150), "VOL. VIII • NO. 404", font=font_info, fill="#44403C")
+        draw.text((width // 2, py1 + 150), edition_tag.upper(), font=font_info, fill="#44403C", anchor="mm")
+        draw.text((px2 - 35, py1 + 150), "PRICE: 1 RE-SHARE", font=font_info, fill="#44403C", anchor="ra")
+
+        draw.line([(px1 + 30, py1 + 172), (px2 - 30, py1 + 172)], fill="#1A1A1A", width=2)
+
+        # Red ink stamp in top-right corner
+        stamp_x1, stamp_y1, stamp_x2, stamp_y2 = px2 - 270, py1 + 185, px2 - 35, py1 + 225
+        draw.rectangle([stamp_x1, stamp_y1, stamp_x2, stamp_y2], outline="#B91C1C", width=3)
+        font_stamp = self._get_serif_font(20, bold=True)
+        draw.text(((stamp_x1 + stamp_x2) // 2, stamp_y1 + 20), "⚡ BREAKING NEWS", font=font_stamp, fill="#B91C1C", anchor="mm")
+
+        # Lead Headline (large serif bold)
+        font_hl = self._get_serif_font(42, bold=True)
+        hl_lines = self._wrap_text(headline, draw, font_hl, 660)
+        hy = py1 + 185
+        for l in hl_lines[:3]:
+            draw.text((px1 + 35, hy), l, font=font_hl, fill="#0F0E0D")
+            hy += 48
+
+        # Subheadline in italics
+        font_sub = self._get_serif_font(24, italic=True)
+        s_lines = self._wrap_text(f'"{subtext}"', draw, font_sub, 900)
+        draw.text((px1 + 35, hy + 8), s_lines[0] if s_lines else subtext, font=font_sub, fill="#333333")
+
+        # Byline
+        draw.text((px1 + 35, hy + 42), "BY SPECIAL CORRESPONDENT IN DELHI • DHH CULTURAL DESK", font=self._get_serif_font(18, bold=True), fill="#78716C")
+        draw.line([(px1 + 30, hy + 72), (px2 - 30, hy + 72)], fill="#1A1A1A", width=1)
+
+        # Press Photo Box
+        img_box_y = hy + 82
+        box_h = 240
+        draw.rectangle([px1 + 30, img_box_y, px2 - 30, img_box_y + box_h], fill="#1E2024", outline="#4B5563", width=2)
+
+        # Graphic inside photo box (Studio mic / audio monitor motif)
+        draw.ellipse([width // 2 - 60, img_box_y + 35, width // 2 + 60, img_box_y + 155], fill="#2D3139", outline="#60A5FA", width=3)
+        font_mic = self._get_serif_font(48, bold=True)
+        draw.text((width // 2, img_box_y + 90), "🎙️", font=font_mic, fill="#FFFFFF", anchor="mm")
+        font_box_tag = self._get_serif_font(22, bold=True)
+        draw.text((width // 2, img_box_y + 180), "[ SCENE EVIDENCE: RECORDING BOOTH ARCHIVE ]", font=font_box_tag, fill="#FBBF24", anchor="mm")
+
+        # Photo Caption
+        font_cap = self._get_serif_font(18, italic=True)
+        draw.text((px1 + 35, img_box_y + box_h + 8), "FILE PHOTO: Underground studio monitor displaying 18 audio stems at 4:15 AM. (PRESS ARCHIVE)", font=font_cap, fill="#57534E")
+
+        # Two Columns Newspaper Layout
+        col_y = img_box_y + box_h + 38
+        col_w = (px2 - px1 - 90) // 2
+        mid_x = px1 + 30 + col_w + 15
+
+        # Vertical dividing hairline
+        draw.line([(mid_x, col_y), (mid_x, height - 120)], fill="#A8A29E", width=1)
+
+        # Left Column text
+        font_body = self._get_serif_font(20)
+        default_story = story_body or "The Desi Hip-Hop underground scene experienced unprecedented activity as artists unveiled major upcoming drops. Scene commentators report heavy 808 bass frequencies disturbing normal routines. Production teams confirm the records carry zero compromises."
+        l_lines = self._wrap_text(default_story, draw, font_body, col_w - 20)
+        ly = col_y
+        for l in l_lines[:5]:
+            draw.text((px1 + 30, ly), l, font=font_body, fill="#1C1917")
+            ly += 26
+
+        # Right Column text
+        font_box_h = self._get_serif_font(20, bold=True)
+        draw.text((mid_x + 15, col_y), "COMMUNITY WITNESS REPORTS:", font=font_box_h, fill="#0F0E0D")
+        default_quote = witness_quote or '"Bhai ne ek line mein poora existential crisis describe kar diya," stated one listener. Engineers noted FL Studio crashed under the sub-bass.'
+        r_lines = self._wrap_text(default_quote, draw, font_body, col_w - 20)
+        ry = col_y + 30
+        for l in r_lines[:4]:
+            draw.text((mid_x + 15, ry), l, font=font_body, fill="#1C1917")
+            ry += 26
+
+        # Newspaper bottom footer
+        draw.line([(px1 + 30, height - 110), (px2 - 30, height - 110)], fill="#1A1A1A", width=2)
+        # Barcode
+        for bx in range(px1 + 35, px1 + 180, 5):
+            bw = 2 if bx % 10 == 0 else 1
+            draw.line([(bx, height - 95), (bx, height - 55)], fill="#1A1A1A", width=bw)
+        font_barcode = self._get_serif_font(14)
+        draw.text((px1 + 195, height - 75), "ARCHIVE NO: DHH-2026-X9 • VERIFIED CLIPPING", font=font_barcode, fill="#57534E")
+        draw.text((px2 - 35, height - 75), f"PRESERVED & CURATED BY {source_tag}", font=self._get_serif_font(18, bold=True), fill="#111111", anchor="ra")
+
+        file_id = f"newspaper_{uuid.uuid4().hex[:10]}.png"
+        file_path = self.output_dir / file_id
+        img.save(str(file_path), "PNG", quality=95)
+
+        return {
+            "file_name": file_id,
+            "file_path": str(file_path),
+            "width": width,
+            "height": height,
+            "format": "PNG",
+            "template": "NEWSPAPER_CUTTING"
+        }
 
     def create_breaking_news_meme(
         self,
@@ -868,12 +1050,13 @@ class MemeEngine:
         cat_lower = category.lower()
         parts = [p.strip() for p in content_text.split("\n\n") if p.strip()]
 
-        if "news" in cat_lower or "radar" in cat_lower or "alert" in cat_lower or "breaking" in cat_lower:
-            return self.create_breaking_news_meme(
+        if "news" in cat_lower or "newspaper" in cat_lower or "radar" in cat_lower or "alert" in cat_lower or "breaking" in cat_lower:
+            return self.create_newspaper_cutting_meme(
                 headline=hook,
                 subtext=parts[0] if parts else content_text,
-                news_tag=category.replace("_", " "),
-                breaking_ticker=f"⚡ TICKER: {punchline or 'Hanumankind, Seedhe Maut, KR$NA buzzing across DHH feeds'}"
+                story_body=parts[1] if len(parts) > 1 else content_text,
+                witness_quote=punchline,
+                edition_tag="DELHI / MUMBAI PRESS ARCHIVE"
             )
         elif "scorecard" in cat_lower or "review" in cat_lower or "audit" in cat_lower or "critic" in cat_lower:
             track = hook.replace("Track Review:", "").replace("Audit:", "").strip()
