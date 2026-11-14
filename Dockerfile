@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 ENV PYTHONPATH=/app
-ENV PORT=8787
+ENV PORT=10000
 
 # Install Python requirements
 COPY requirements.txt ./
@@ -34,7 +34,7 @@ RUN mkdir -p /app/backend/data/media/memes \
              /app/backend/data/backups \
              /app/backend/data/sandbox
 
-EXPOSE 8787
+EXPOSE 10000
 
 # Run the 24/7 autonomous media engine
 CMD ["python", "run.py"]
