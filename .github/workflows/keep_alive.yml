@@ -2,13 +2,22 @@ name: 24-7 Keep-Alive Monitor
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    # Run every 7 minutes with non-standard cadence to bypass GitHub Actions peak queue congestion
+    - cron: '*/7 * * * *'
   workflow_dispatch:
 
 jobs:
   keep_alive:
+    name: Ping Cloud Service & Keep Warm
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Ping DHH Media Network Cloud Service
+      - name: Ping Render Health & Queue Tick Endpoints
         run: |
-          curl -sS -f -m 15 https://dhh-media-network.onrender.com/api/health/status || true
+          echo "Pinging Render Public Health endpoint..."
+          curl -sS -m 25 --retry 2 https://dhh-media-network.onrender.com/health || true
+          
+          echo "Pinging Autonomous Queue Tick..."
+          curl -sS -m 25 --retry 2 https://dhh-media-network.onrender.com/api/queue/tick || true
+          
+          echo "Heartbeat completed successfully."
