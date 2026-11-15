@@ -60,30 +60,24 @@ class ReelEngine:
         return lines
 
     def create_reel_text_overlay(self, width: int, text: str, output_path: Path) -> Path:
-        """Create a crisp, modern rounded white header card for the reel meme setup."""
-        card_margin = 35
-        card_w = width - (card_margin * 2)
-        
+        """Create a clean, floating outlined meme text overlay without blocking boxes."""
         dummy = Image.new("RGBA", (100, 100))
         d_draw = ImageDraw.Draw(dummy)
-        font = self._get_font(38, bold=True)
-        lines = self._wrap_text(text, d_draw, font, card_w - 60)
+        font = self._get_font(36, bold=True)
+        lines = self._wrap_text(text, d_draw, font, width - 80)
         
-        line_h = 48
-        card_h = max(130, len(lines) * line_h + 50)
+        line_h = 46
+        overlay_h = len(lines) * line_h + 30
         
-        overlay = Image.new("RGBA", (width, card_h + 30), color=(0, 0, 0, 0))
+        overlay = Image.new("RGBA", (width, overlay_h), color=(0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
         
-        # Drop shadow
-        draw.rounded_rectangle([card_margin + 3, 14, width - card_margin + 3, card_h + 14], radius=22, fill=(0, 0, 0, 140))
-        # Crisp White Card with subtle border
-        draw.rounded_rectangle([card_margin, 10, width - card_margin, card_h + 10], radius=22, fill=(255, 255, 255, 245), outline=(226, 232, 240, 255), width=2)
-        
-        # Setup Text
-        cy = 28
+        cy = 15
         for line in lines:
-            draw.text((width // 2, cy + line_h // 2), line, font=font, fill=(15, 23, 42, 255), anchor="mm")
+            # 1. Subtle soft drop shadow for depth
+            draw.text((width // 2 + 2, cy + 2), line, font=font, fill=(0, 0, 0, 180), anchor="ma")
+            # 2. Main crisp white typography with bold black stroke for 100% visibility on any background
+            draw.text((width // 2, cy), line, font=font, fill=(255, 255, 255, 255), stroke_width=4, stroke_fill=(0, 0, 0, 255), anchor="ma")
             cy += line_h
             
         overlay.save(str(output_path), "PNG")
@@ -98,12 +92,12 @@ class ReelEngine:
         """Overlay meme setup text onto a 9:16 template video with audio using ffmpeg."""
         tpl_path = self.templates_dir / template_filename
         if not tpl_path.exists():
-            # Try searching by partial match
-            candidates = list(self.templates_dir.glob(f"*{template_filename}*"))
+            # Try searching by partial match for MP4 video
+            candidates = list(self.templates_dir.glob(f"*{template_filename}*.mp4"))
             if candidates:
                 tpl_path = candidates[0]
             else:
-                raise FileNotFoundError(f"Template video '{template_filename}' not found in {self.templates_dir}")
+                raise FileNotFoundError(f"Template video '{template_filename}' (.mp4) not found in {self.templates_dir}")
 
         out_name = custom_out_name or f"reel_{uuid.uuid4().hex[:10]}.mp4"
         out_path = self.output_dir / out_name
@@ -144,5 +138,20 @@ class ReelEngine:
             "file_size": out_path.stat().st_size,
             "format": "MP4"
         }
+
+    def render_autonomous_reel(self, meme_text: str, custom_out_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Dynamically selects the freshest, least-used video template from the autonomous
+        template_finder catalog and renders a clean, high-impact reel.
+        """
+        from backend.app.services.template_finder import template_finder
+        fresh_tpl = template_finder.get_fresh_template()
+        tpl_path = Path(fresh_tpl["local_path"])
+        res = self.render_reel_meme(tpl_path.name, meme_text, custom_out_name)
+        res["template_title"] = fresh_tpl.get("title")
+        res["template_source"] = fresh_tpl.get("source")
+        res["template_key"] = fresh_tpl.get("template_key")
+        res["github_cdn_url"] = fresh_tpl.get("github_cdn_url")
+        return res
 
 reel_engine = ReelEngine()
