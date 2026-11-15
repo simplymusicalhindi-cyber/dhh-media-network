@@ -2,8 +2,8 @@ name: DHH 24/7 Autonomous Publisher & Keep-Alive
 
 on:
   schedule:
-    # Run every 15 minutes, 24/7
-    - cron: '*/15 * * * *'
+    # Run every 11 minutes (staggered with 7-min keep-alive to avoid queue delays)
+    - cron: '*/11 * * * *'
   workflow_dispatch:
     # Allows manual trigger anytime from GitHub Actions tab
 
