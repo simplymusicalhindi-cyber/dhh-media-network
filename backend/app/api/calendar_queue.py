@@ -120,3 +120,34 @@ def cancel_queue_item(job_id: int, db: Session = Depends(get_db)):
     job.status = "CANCELLED"
     db.commit()
     return {"success": True}
+
+@router.api_route("/tick", methods=["GET", "POST"])
+def autonomous_cron_tick(db: Session = Depends(get_db)):
+    """
+    Heartbeat and autonomous execution endpoint called by cloud cron (GitHub Actions / Uptime pinger).
+    1. Keeps service warm and active.
+    2. Processes any due publishing jobs immediately.
+    3. Triggers autonomous content buffer generation if daily targets are unmet.
+    """
+    from backend.app.services.scheduler_engine import scheduler_engine
+    
+    # Process any due publishing jobs
+    scheduler_engine.process_due_queue_jobs()
+    
+    # Check if queue needs replenishment
+    scheduler_engine.autonomous_content_generation_loop()
+    
+    now = datetime.datetime.utcnow()
+    pending = db.query(PublishingQueue).filter(PublishingQueue.status == "QUEUED").count()
+    due = db.query(PublishingQueue).filter(
+        PublishingQueue.status == "QUEUED",
+        PublishingQueue.scheduled_for <= now
+    ).count()
+    
+    return {
+        "status": "OK",
+        "action": "AUTONOMOUS_TICK_EXECUTED",
+        "timestamp": now.isoformat(),
+        "pending_in_queue": pending,
+        "due_count": due
+    }
