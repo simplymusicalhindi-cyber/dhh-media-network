@@ -1,0 +1,60 @@
+name: DHH Daily Reel Template Discovery
+
+on:
+  schedule:
+    # Runs daily at 03:00 UTC (08:30 AM IST)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    # Allows manual trigger anytime from GitHub Actions UI
+
+concurrency:
+  group: dhh-template-discovery
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    name: Autonomous Template Discovery & Sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install System Dependencies (ffmpeg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt instaloader yt-dlp
+
+      - name: Run Autonomous Multi-Source Template Discovery
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN || 'EAAQK6xLKfhwBS6tAuqOnDS9H9I4L0jEUMOP8PvK3qVMHfRzHwHEwvu30AHL3uGWTSUnnBZAOZBpf2mTujNlQhUbLvjOzK8ooEDUkJW2MlvwIyrjNCZCuzh8XRQEs02Ud7Q4BAje1cKzdLsHa3KpOjh6iszQvfnR0znXY78JxapaIjuJEiy8KTdOv00ZAOkMxFgZAMORqK' }}
+        run: |
+          python -c "
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path.cwd()))
+          from backend.app.services.template_finder import template_finder
+          summary = template_finder.run_daily_discovery()
+          print('Discovery Summary:', summary)
+          "
+
+      - name: Commit & Push Fresh Templates to GitHub Repository
+        run: |
+          git config --global user.name "DHH-Autonomous-Bot"
+          git config --global user.email "bot@dhhmedianetwork.internal"
+          git add backend/data/media/reel_templates/ backend/data/dhh_media.db || true
+          git commit -m "Auto-discover: Added fresh daily meme templates [skip ci]" || echo "No changes to commit"
+          git push origin main || echo "Push skipped or up-to-date"
