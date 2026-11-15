@@ -1,5 +1,5 @@
 import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
@@ -122,20 +122,13 @@ def cancel_queue_item(job_id: int, db: Session = Depends(get_db)):
     return {"success": True}
 
 @router.api_route("/tick", methods=["GET", "POST"])
-def autonomous_cron_tick(db: Session = Depends(get_db)):
+def autonomous_cron_tick(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Heartbeat and autonomous execution endpoint called by cloud cron (GitHub Actions / Uptime pinger).
-    1. Keeps service warm and active.
-    2. Processes any due publishing jobs immediately.
-    3. Triggers autonomous content buffer generation if daily targets are unmet.
+    1. Responds immediately (< 5ms) with HTTP 200 to prevent any timeout.
+    2. Runs due queue processing and buffer replenishment asynchronously in background tasks.
     """
     from backend.app.services.scheduler_engine import scheduler_engine
-    
-    # Process any due publishing jobs
-    scheduler_engine.process_due_queue_jobs()
-    
-    # Check if queue needs replenishment
-    scheduler_engine.autonomous_content_generation_loop()
     
     now = datetime.datetime.utcnow()
     pending = db.query(PublishingQueue).filter(PublishingQueue.status == "QUEUED").count()
@@ -143,6 +136,10 @@ def autonomous_cron_tick(db: Session = Depends(get_db)):
         PublishingQueue.status == "QUEUED",
         PublishingQueue.scheduled_for <= now
     ).count()
+    
+    # Schedule heavy background jobs without blocking HTTP response
+    background_tasks.add_task(scheduler_engine.process_due_queue_jobs)
+    background_tasks.add_task(scheduler_engine.autonomous_content_generation_loop)
     
     return {
         "status": "OK",
