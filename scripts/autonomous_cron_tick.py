@@ -16,6 +16,8 @@ from backend.app.config import settings
 from backend.app.services.instagram_client import InstagramAPIClient
 from backend.app.services.meme_engine import meme_engine
 from backend.app.services.story_engine import story_engine
+from backend.app.services.reel_engine import reel_engine
+from backend.app.services.template_finder import template_finder
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 REPO = "simplymusicalhindi-cyber/dhh-media-network"
@@ -86,7 +88,24 @@ async def main():
         except Exception as e:
             print(f"Render {endpoint} notice: {e}")
 
-    # 2. Check time elapsed since last Instagram post
+    # 2. Check and run daily template discovery if not yet executed today
+    try:
+        today_prefix = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        import sqlite3
+        conn = sqlite3.connect(settings.DATA_DIR / "dhh_media.db")
+        c = conn.cursor()
+        c.execute("SELECT count(*) FROM reel_templates WHERE created_at LIKE ?", (f"{today_prefix}%",))
+        count_today = c.fetchone()[0]
+        conn.close()
+        if count_today == 0:
+            print("[Watchdog] Running autonomous daily template discovery...")
+            template_finder.run_daily_discovery()
+        else:
+            print(f"[Watchdog] Templates discovery already completed today ({count_today} added).")
+    except Exception as tpl_err:
+        print("[Watchdog] Template check notice:", tpl_err)
+
+    # 3. Check time elapsed since last Instagram post
     latest = get_latest_post_info()
     hours_since_last_post = 999.0
     if latest and latest.get("timestamp"):
@@ -111,47 +130,70 @@ async def main():
     if hours_since_last_post >= 3.5 and is_active_hours:
         print("THRESHOLD EXCEEDED: Autonomously generating and publishing fresh DHH post...")
         client = InstagramAPIClient(mock_mode=False)
-
-        # Rotate through fresh meme templates
-        templates_pool = [
-            ("distracted_boyfriend", "DHH fans choosing what to obsess over after a new track drops:", [
-                {"text": "10-Sec Diss Subliminal", "x_pct": 0.22, "y_pct": 0.60, "box_color": "#EF4444", "text_color": "#FFFFFF"},
-                {"text": "DHH Audience", "x_pct": 0.58, "y_pct": 0.45, "box_color": "#3B82F6", "text_color": "#FFFFFF"},
-                {"text": "Insane Complex Rhyme Scheme", "x_pct": 0.85, "y_pct": 0.62, "box_color": "#10B981", "text_color": "#FFFFFF"}
-            ], "Every single time a new project drops in DHH 💀 Complex rhyme schemes vs 10 seconds of subliminal beef. Which one caught your attention first? Drop your thoughts below! 👇\n\n#DesiHipHop #DHH #SeedheMaut #KR$NA #Raftaar #DIVINE #MCStan #DHHMemes #IndianHipHop"),
-
-            ("two_buttons", "DHH audience every time an underground rapper crosses 100k views:", [
-                {"text": "Bhai Underrated God Hai", "x_pct": 0.30, "y_pct": 0.24, "box_color": "#2563EB", "text_color": "#FFFFFF"},
-                {"text": "Commercial Ho Gaya Skip Karo", "x_pct": 0.65, "y_pct": 0.17, "box_color": "#DC2626", "text_color": "#FFFFFF"}
-            ], "The classic DHH underground paradox 😭💀 The second an underground artist gets their flowers, people start screaming 'commercial'! Who are you defending forever? Drop them below 👇\n\n#DesiHipHop #DHH #IndianRap #SeedheMaut #KR$NA #DHHMemes #IndianHipHop"),
-
-            ("trade_offer", "POV: Underground Delhi producer sends you an Instagram DM at 3:30 AM", [
-                {"text": "YOU RECEIVE:\nUnfinished MP3 with 6 FL plugins crashing", "x_pct": 0.75, "y_pct": 0.32, "box_color": "#1E293B", "text_color": "#F8FAFC"},
-                {"text": "I RECEIVE:\n1 Story Share & 'Bhai Hard Hai'", "x_pct": 0.25, "y_pct": 0.32, "box_color": "#1E293B", "text_color": "#38BDF8"}
-            ], "Every producer-artist relationship in the Indian hip hop scene at 3 AM 🎹💀 Tag that one producer who sends unmixed fire in your DMs! 👇\n\n#DesiHipHop #DHH #FLStudio #ProducerLife #Beatmakers #DHHMemes #IndianHipHop")
-        ]
-
         import random
-        t_name, t_head, t_overlays, t_caption = random.choice(templates_pool)
 
-        # Generate clean meme
-        meme_res = meme_engine.create_imgflip_card_meme(
-            template_name=t_name,
-            header_text=t_head,
-            overlays=t_overlays,
-            dark_mode=False
-        )
+        post_type = random.choice(["REEL", "MEME"])
 
-        local_path = Path(meme_res["file_path"])
-        repo_path = f"backend/data/media/memes/{meme_res['file_name']}"
-        push_file_to_github(local_path, repo_path, f"Autonomous watchdog publish {meme_res['file_name']}")
-        raw_url = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{repo_path}"
+        if post_type == "REEL":
+            print("[Watchdog] Generating fresh autonomous DHH Reel using fresh template...")
+            reel_hooks = [
+                ("POV: Delhi producer sending unmixed 808s at 4 AM saying 'Bhai loop check kar' 💀", "Every single producer-rapper dynamic in DHH 😭 Who is that one producer friend for you? Drop below! 👇\n\n#DesiHipHop #DHH #SeedheMaut #KR$NA #FLStudio #DHHMemes #IndianHipHop"),
+                ("When the sub-bass drops on an Umair beat and your earphones start vibrating 🔊🚗💀", "No one: \nUmair in the studio: 🔥🔊 What's your favorite beat drop this year? Drop below! 👇\n\n#DesiHipHop #DHH #Umair #TalhaAnjum #SubBass #DHHMemes #IndianHipHop"),
+                ("Hardcore DHH fan explaining how a 12-bar scheme connects to Greek mythology 😭", "Overanalyzing every single KR$NA bar like it's a board exam 💀 Who does this? Drop below 👇\n\n#DesiHipHop #DHH #KR$NA #Awam #Kalamkaar #DHHMemes #IndianHipHop"),
+                ("Walking out of a Seedhe Maut moshpit with 1 missing shoe and 100% peace of mind 🧘‍♂️", "TBS4L or nothing ⚔️ Delhi scene hits different in person. Have you survived an SM moshpit? 👇\n\n#DesiHipHop #DHH #SeedheMaut #TBS4L #LunchBreak #DHHMemes #IndianHipHop"),
+                ("Underground hip hop fan when their favorite artist crosses 50k monthly listeners 🥺", "Yesterday: 'Bhai underrated god hai!' 🥺 Today: 'Commercial ho gaya skip karo' 💀 #DesiHipHop #DHH #UndergroundHipHop #DHHMemes #IndianHipHop")
+            ]
+            hook_text, reel_caption = random.choice(reel_hooks)
+            reel_res = reel_engine.render_autonomous_reel(hook_text)
+            local_path = Path(reel_res["file_path"])
+            repo_path = f"backend/data/media/reels/{reel_res['file_name']}"
+            push_file_to_github(local_path, repo_path, f"Autonomous watchdog reel {reel_res['file_name']}")
+            raw_url = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{repo_path}"
+            
+            print(f"Uploading and publishing reel {reel_res['file_name']} (Template: {reel_res.get('template_title')})...")
+            pub_res = await client.publish_reel(raw_url, reel_caption)
+            print("Reel publish result:", pub_res)
+            if pub_res.get("status") == "PUBLISHED":
+                print(f"SUCCESS: Autonomous watchdog posted Reel live! Link: {pub_res.get('permalink')}")
+        else:
+            # Generate clean meme
+            templates_pool = [
+                ("distracted_boyfriend", "DHH fans choosing what to obsess over after a new track drops:", [
+                    {"text": "10-Sec Diss Subliminal", "x_pct": 0.22, "y_pct": 0.60, "box_color": "#EF4444", "text_color": "#FFFFFF"},
+                    {"text": "DHH Audience", "x_pct": 0.58, "y_pct": 0.45, "box_color": "#3B82F6", "text_color": "#FFFFFF"},
+                    {"text": "Insane Complex Rhyme Scheme", "x_pct": 0.85, "y_pct": 0.62, "box_color": "#10B981", "text_color": "#FFFFFF"}
+                ], "Every single time a new project drops in DHH 💀 Complex rhyme schemes vs 10 seconds of subliminal beef. Which one caught your attention first? Drop your thoughts below! 👇\n\n#DesiHipHop #DHH #SeedheMaut #KR$NA #Raftaar #DIVINE #MCStan #DHHMemes #IndianHipHop"),
 
-        print(f"Uploading and publishing {meme_res['file_name']}...")
-        pub_res = await client.publish_image_post(raw_url, t_caption)
-        print("Publish result:", pub_res)
-        if pub_res.get("status") == "PUBLISHED":
-            print(f"SUCCESS: Autonomous watchdog posted live! Link: {pub_res.get('permalink')}")
+                ("two_buttons", "DHH audience every time an underground rapper crosses 100k views:", [
+                    {"text": "Bhai Underrated God Hai", "x_pct": 0.30, "y_pct": 0.24, "box_color": "#2563EB", "text_color": "#FFFFFF"},
+                    {"text": "Commercial Ho Gaya Skip Karo", "x_pct": 0.65, "y_pct": 0.17, "box_color": "#DC2626", "text_color": "#FFFFFF"}
+                ], "The classic DHH underground paradox 😭💀 The second an underground artist gets their flowers, people start screaming 'commercial'! Who are you defending forever? Drop them below 👇\n\n#DesiHipHop #DHH #IndianRap #SeedheMaut #KR$NA #DHHMemes #IndianHipHop"),
+
+                ("trade_offer", "POV: Underground Delhi producer sends you an Instagram DM at 3:30 AM", [
+                    {"text": "YOU RECEIVE:\nUnfinished MP3 with 6 FL plugins crashing", "x_pct": 0.75, "y_pct": 0.32, "box_color": "#1E293B", "text_color": "#F8FAFC"},
+                    {"text": "I RECEIVE:\n1 Story Share & 'Bhai Hard Hai'", "x_pct": 0.25, "y_pct": 0.32, "box_color": "#1E293B", "text_color": "#38BDF8"}
+                ], "Every producer-artist relationship in the Indian hip hop scene at 3 AM 🎹💀 Tag that one producer who sends unmixed fire in your DMs! 👇\n\n#DesiHipHop #DHH #FLStudio #ProducerLife #Beatmakers #DHHMemes #IndianHipHop")
+            ]
+
+            t_name, t_head, t_overlays, t_caption = random.choice(templates_pool)
+
+            meme_res = meme_engine.create_imgflip_card_meme(
+                template_name=t_name,
+                header_text=t_head,
+                overlays=t_overlays,
+                dark_mode=False
+            )
+
+            local_path = Path(meme_res["file_path"])
+            repo_path = f"backend/data/media/memes/{meme_res['file_name']}"
+            push_file_to_github(local_path, repo_path, f"Autonomous watchdog publish {meme_res['file_name']}")
+            raw_url = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{repo_path}"
+
+            print(f"Uploading and publishing {meme_res['file_name']}...")
+            pub_res = await client.publish_image_post(raw_url, t_caption)
+            print("Publish result:", pub_res)
+            if pub_res.get("status") == "PUBLISHED":
+                print(f"SUCCESS: Autonomous watchdog posted live! Link: {pub_res.get('permalink')}")
     else:
         print("Schedule is healthy. Next post scheduled within normal window.")
 
