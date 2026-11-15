@@ -132,7 +132,7 @@ class TemplateFinderService:
     def discover_from_instagram(self, usernames: Optional[List[str]] = None, limit_per_user: int = 3) -> List[Dict[str, Any]]:
         """Scrape fresh vertical reel templates from curated Instagram accounts."""
         if usernames is None:
-            usernames = ["templatesays", "thetemplatess", "allmemetemplates", "memetemplates_hub"]
+            usernames = ["templatesays", "desihiphopmemes", "thetemplatess", "allmemetemplates"]
             
         loader = instaloader.Instaloader(
             dirname_pattern=str(self.templates_dir),
@@ -185,9 +185,15 @@ class TemplateFinderService:
         """Search and download fresh 9:16 vertical meme video templates from YouTube Shorts."""
         if queries is None:
             queries = [
+                "dhh meme template shorts",
+                "seedhe maut meme template shorts",
+                "krsna meme template shorts",
+                "raftaar meme template shorts",
+                "mc stan meme template shorts",
+                "arpit bala meme template shorts",
+                "samay raina meme template shorts",
                 "indian meme template shorts",
-                "trending meme template no text shorts",
-                "hindi meme template vertical"
+                "trending meme template no text shorts"
             ]
 
         added = []
