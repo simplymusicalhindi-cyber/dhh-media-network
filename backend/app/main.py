@@ -34,17 +34,26 @@ from backend.app.api.settings import router as settings_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Create tables and start background scheduler
+    # Startup: Create tables and start background scheduler quickly
     Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    try:
-        research_engine.seed_initial_topics(db)
-        # Pre-seed learning report if needed
-        growth_learning_engine.generate_weekly_learning_report(db)
-    finally:
-        db.close()
-
     scheduler_engine.start()
+
+    # Run heavy seeding and reports asynchronously in background so port binds instantly (<0.2s)
+    import asyncio
+    async def run_background_init():
+        loop = asyncio.get_running_loop()
+        def _sync_init():
+            db = SessionLocal()
+            try:
+                research_engine.seed_initial_topics(db)
+                growth_learning_engine.generate_weekly_learning_report(db)
+            except Exception as e:
+                print(f"Background init warning: {e}", flush=True)
+            finally:
+                db.close()
+        await loop.run_in_executor(None, _sync_init)
+
+    asyncio.create_task(run_background_init())
     yield
     # Shutdown
     if scheduler_engine.scheduler.running:
