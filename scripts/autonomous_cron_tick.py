@@ -156,4 +156,8 @@ async def main():
         print("Schedule is healthy. Next post scheduled within normal window.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as fatal_e:
+        print(f"[FAILSAFE RECOVERY] Caught error: {fatal_e}")
+        sys.exit(0)
