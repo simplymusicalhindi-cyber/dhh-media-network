@@ -77,14 +77,14 @@ def get_latest_post_info():
 async def main():
     print(f"[{datetime.now(timezone.utc).isoformat()}] === DHH Autonomous Watchdog Tick ===")
     
-    # 1. Ping Render Service to guarantee it never sleeps
-    render_url = "https://dhh-media-network.onrender.com/health"
-    try:
-        req = urllib.request.Request(render_url, headers={"User-Agent": "DHH-Watchdog/1.0"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            print(f"Render health ping: HTTP {resp.status}")
-    except Exception as e:
-        print("Render ping notice:", e)
+    # 1. Ping Render Service and Queue Tick to guarantee it never sleeps and executes due jobs
+    for endpoint in ["/health", "/api/queue/tick"]:
+        try:
+            req = urllib.request.Request(f"https://dhh-media-network.onrender.com{endpoint}", headers={"User-Agent": "DHH-Watchdog/1.0"})
+            with urllib.request.urlopen(req, timeout=25) as resp:
+                print(f"Render {endpoint} ping: HTTP {resp.status}")
+        except Exception as e:
+            print(f"Render {endpoint} notice: {e}")
 
     # 2. Check time elapsed since last Instagram post
     latest = get_latest_post_info()
