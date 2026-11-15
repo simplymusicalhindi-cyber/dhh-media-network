@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -29,15 +27,15 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install Core Publishing Dependencies
+      - name: Install Project Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install httpx pillow pydantic pydantic-settings python-dotenv
+          pip install -r requirements.txt
 
       - name: Ping Render & Execute Autonomous Watchdog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN || 'EAAQK6xLKfhwBS6tAuqOnDS9H9I4L0jEUMOP8PvK3qVMHfRzHwHEwvu30AHL3uGWTSUnnBZAOZBpf2mTujNlQhUbLvjOzK8ooEDUkJW2MlvwIyrjNCZCuzh8XRQEs02Ud7Q4BAje1cKzdLsHa3KpOjh6iszQvfnR0znXY78JxapaIjuJEiy8KTdOv00ZAOkMxFgZAMORqK' }}
+          INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID || '17841419945554575' }}
         run: |
           python scripts/autonomous_cron_tick.py
