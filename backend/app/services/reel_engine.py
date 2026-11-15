@@ -61,10 +61,15 @@ class ReelEngine:
 
     def create_reel_text_overlay(self, width: int, text: str, output_path: Path) -> Path:
         """Create a clean, floating outlined meme text overlay without blocking boxes."""
+        import re
+        # Clean unrenderable 4-byte unicode emojis from video overlay to prevent missing glyph boxes (□)
+        clean_text = re.sub(r'[\U00010000-\U0010ffff]', '', text).strip()
+        clean_text = re.sub(r'\s+', ' ', clean_text)
+
         dummy = Image.new("RGBA", (100, 100))
         d_draw = ImageDraw.Draw(dummy)
         font = self._get_font(36, bold=True)
-        lines = self._wrap_text(text, d_draw, font, width - 80)
+        lines = self._wrap_text(clean_text, d_draw, font, width - 80)
         
         line_h = 46
         overlay_h = len(lines) * line_h + 30
