@@ -13,6 +13,9 @@ WORKDIR /app
 
 ENV PYTHONPATH=/app
 ENV PORT=10000
+ENV PYTHONUNBUFFERED=1
+ENV MALLOC_TRIM_THRESHOLD_=100000
+ENV RENDER=true
 
 # Install Python requirements
 COPY requirements.txt ./
