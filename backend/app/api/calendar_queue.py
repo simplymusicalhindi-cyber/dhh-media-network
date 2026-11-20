@@ -137,9 +137,11 @@ def autonomous_cron_tick(background_tasks: BackgroundTasks, db: Session = Depend
         PublishingQueue.scheduled_for <= now
     ).count()
     
-    # Schedule heavy background jobs without blocking HTTP response
+    # Schedule background jobs without blocking HTTP response
+    from backend.app.services.scheduler_engine import trim_process_memory
     background_tasks.add_task(scheduler_engine.process_due_queue_jobs)
     background_tasks.add_task(scheduler_engine.autonomous_content_generation_loop)
+    background_tasks.add_task(trim_process_memory)
     
     return {
         "status": "OK",
