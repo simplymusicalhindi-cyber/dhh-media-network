@@ -41,11 +41,11 @@ class Settings(BaseSettings):
 
     # Instagram API & Environment
     INSTAGRAM_MOCK_MODE: bool = False  # Set to False now that live official credentials are connected!
-    META_APP_ID: str = ""
-    META_APP_SECRET: str = ""
+    META_APP_ID: str = "1137904655695388"
+    META_APP_SECRET: str = "4ca6d73193a671f0c1893622ec5aa4f0"
     INSTAGRAM_ACCOUNT_ID: str = "17841419945554575"
-    ACCESS_TOKEN: str = "EAAQK6xLKfhwBSwPCdm3ukxAwbfttTSRdgJVn6ScpOsMjHzjvInBzv0pStwPglkR12ZACRtucJ85xPC0DXsiYRV36TjAXQWgdMSwccD8W5CTPxZAIUZBQpHQxCMsL4lMez7Gb75t6cswz1Ochc0kawwc5nM6tQqxpSBZCZCespOVVSNYXgIGhXup0QZBl9C3DyaRD0ZBTo99ZC1ArW7pKHzxgjv3HCZB2NoGVbbkLJfjPNxZBEZD"
-    TOKEN_EXPIRES_AT: str = ""
+    ACCESS_TOKEN: str = "EAAQK6xLKfhwBS1ZBpwXNGhAiRUkaSlwYNhwOdRguKeiuyfTAQPsxIIXNeyPn91uJr5RknnnaR9gGb7gwRZA7CzevT71qIB0xMlAjXMd1TUrr6GvFT0TdgKszZBsaEwBEsCVZAzb2gP0VuyzSYWV9zxEs6sL4F0ZBZBd9gxQRLQnx69akihLNY4zZA2xG7Y8mL0LxwNKeDz9"
+    TOKEN_EXPIRES_AT: str = "NEVER_EXPIRES"
     # Public media URL base (Auto-detects Render.com public domain if running in cloud)
     PUBLIC_MEDIA_URL_BASE: str = os.getenv("RENDER_EXTERNAL_URL", "http://127.0.0.1:8787") + "/media" if os.getenv("RENDER_EXTERNAL_URL") else "http://127.0.0.1:8787/media"
     WEBHOOK_VERIFY_TOKEN: str = "dhh_meme_network_secure_token"
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     ALLOW_REMOTE_ACCESS: bool = False
 
     class Config:
-        env_file = ".env"
+        env_file = str(PROJECT_ROOT / ".env")
         env_file_encoding = "utf-8"
         extra = "ignore"
 
