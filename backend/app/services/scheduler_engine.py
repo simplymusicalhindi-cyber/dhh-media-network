@@ -1,5 +1,8 @@
 import datetime
 import uuid
+import os
+import gc
+import ctypes
 from typing import Dict, Any, List, Optional
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -11,12 +14,22 @@ from backend.app.models.content import ContentIdea, GeneratedContent, Publishing
 from backend.app.models.analytics import DailyMetrics
 from backend.app.services.ai_engine import ai_engine
 from backend.app.services.meme_engine import meme_engine
-from backend.app.services.reels_engine import reels_engine
+from backend.app.services.reel_engine import reel_engine
 from backend.app.services.story_engine import story_engine
 from backend.app.services.seo_engine import seo_engine
 from backend.app.services.instagram_client import instagram_client
 from backend.app.services.reliability_engine import reliability_engine
 from backend.app.services.review_engine import review_engine
+
+def trim_process_memory():
+    """Explicitly triggers Python garbage collection and returns free heap memory back to the OS."""
+    gc.collect()
+    try:
+        if hasattr(ctypes, "CDLL"):
+            libc = ctypes.CDLL("libc.so.6")
+            libc.malloc_trim(0)
+    except Exception:
+        pass
 
 class SchedulerEngine:
     def __init__(self):
@@ -122,35 +135,36 @@ class SchedulerEngine:
         db.refresh(content)
         return content
 
-    async def autonomous_generate_reel(self, db: Session, topic: Optional[str] = None) -> GeneratedContent:
-        """Autonomously script, record/render 9:16 vertical video, add audio & cover, and store Reel."""
-        reel_dict = await ai_engine.generate_reel_concept(topic=topic)
+    async def autonomous_generate_reel(self, db: Session, topic: Optional[str] = None) -> Optional[GeneratedContent]:
+        """Autonomously script, select authentic DHH template, render 9:16 vertical video with non-overlapping text, and store Reel."""
+        is_render = bool(os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID") or os.getenv("IS_RENDER"))
+        if is_render:
+            print("[Render Web Tier] Skipping in-container FFmpeg reel generation to maintain <150MB memory footprint. Reels are rendered by GitHub Actions runner (7GB RAM).", flush=True)
+            return None
 
-        # Render MP4 video via FFmpeg
-        render_res = reels_engine.render_reel(
-            title=reel_dict["title"],
-            hook=reel_dict["hook"],
-            scenes=reel_dict.get("scenes", []),
-            punchline=reel_dict.get("punchline", "Tag your friends!")
-        )
+        reel_dict = await ai_engine.generate_reel_concept(topic=topic)
+        hook_text = reel_dict.get("hook", "When the DHH beat drops at 3 AM")
+
+        # Render MP4 video via authentic DHH template engine
+        render_res = reel_engine.render_autonomous_reel(meme_text=hook_text)
 
         # SEO Caption
         seo_res = seo_engine.generate_optimized_caption(
-            hook=reel_dict["hook"],
-            body=f"{reel_dict['title']}\nWatch till the end for the real breakdown 🤯",
+            hook=hook_text,
+            body=f"{reel_dict.get('title', 'DHH Culture Reel')}\nWatch till the end for the real breakdown 🤯",
             cta="Do you agree? Drop your thoughts below! 👇🔥 #DesiHipHop",
             category="REELS"
         )
 
         content = GeneratedContent(
             content_type="REEL",
-            title=f"REEL: {reel_dict['title']}",
+            title=f"REEL: {reel_dict.get('title', hook_text[:35])}",
             caption=seo_res["caption"],
             hashtags=seo_res["hashtags"],
-            alt_text=f"Desi Hip-Hop vertical reel: {reel_dict['hook']}",
+            alt_text=f"Desi Hip-Hop vertical reel: {hook_text}",
             seo_score=seo_res["seo_score"],
-            media_path=render_res["video_path"],
-            cover_path=render_res["cover_path"],
+            media_path=render_res["file_path"],
+            cover_path=None,
             quality_score=reel_dict.get("quality_score", 9.0),
             status="READY",
             created_at=datetime.datetime.utcnow()
@@ -158,6 +172,7 @@ class SchedulerEngine:
         db.add(content)
         db.commit()
         db.refresh(content)
+        trim_process_memory()
         return content
 
     async def autonomous_generate_story(self, db: Session) -> GeneratedContent:
@@ -215,6 +230,7 @@ class SchedulerEngine:
         if self.emergency_stop:
             return
 
+        is_render = bool(os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID") or os.getenv("IS_RENDER"))
         db = SessionLocal()
         try:
             today_start = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -242,32 +258,40 @@ class SchedulerEngine:
             ).count()
 
             import asyncio
-            # Fill missing images
+            # Fill missing images (Lightweight Pillow generation: safe on all environments)
             if queued_images < self.daily_image_target:
-                diff = min(3, self.daily_image_target - queued_images)
+                diff = min(2, self.daily_image_target - queued_images)
                 for i in range(diff):
                     sched_time = datetime.datetime.utcnow() + datetime.timedelta(hours=i * 2 + 1)
                     content = asyncio.run(self.autonomous_generate_meme(db))
                     self.enqueue_content(db, content.id, sched_time)
+                    trim_process_memory()
 
-            # Fill missing reels
-            if queued_reels < self.daily_reels_target:
-                diff = min(2, self.daily_reels_target - queued_reels)
-                for i in range(diff):
-                    sched_time = datetime.datetime.utcnow() + datetime.timedelta(hours=i * 3 + 2)
-                    content = asyncio.run(self.autonomous_generate_reel(db))
-                    self.enqueue_content(db, content.id, sched_time)
+            # Fill missing reels (On Render: omit in-container FFmpeg to prevent 512MB RAM OOM)
+            if not is_render:
+                if queued_reels < self.daily_reels_target:
+                    diff = min(2, self.daily_reels_target - queued_reels)
+                    for i in range(diff):
+                        sched_time = datetime.datetime.utcnow() + datetime.timedelta(hours=i * 3 + 2)
+                        content = asyncio.run(self.autonomous_generate_reel(db))
+                        if content:
+                            self.enqueue_content(db, content.id, sched_time)
+                        trim_process_memory()
+            else:
+                print("[Render Scheduler] Free tier memory safeguard active: reels generated via GitHub Actions runner.", flush=True)
 
             # Fill missing stories
             if queued_stories < self.daily_stories_target:
                 sched_time = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
                 content = asyncio.run(self.autonomous_generate_story(db))
                 self.enqueue_content(db, content.id, sched_time)
+                trim_process_memory()
 
         except Exception as e:
             reliability_engine.record_error_and_recover(db, "SchedulerContentGen", e)
         finally:
             db.close()
+            trim_process_memory()
 
     def process_due_queue_jobs(self):
         """Check for scheduled jobs that are due and publish them."""
@@ -340,11 +364,13 @@ class SchedulerEngine:
                         job.status = "QUEUED"
                         job.scheduled_for = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
                     db.commit()
+                trim_process_memory()
 
         except Exception as e:
             reliability_engine.record_error_and_recover(db, "SchedulerQueueProcessor", e)
         finally:
             db.close()
+            trim_process_memory()
 
     def sync_insights(self):
         """Fetch updated performance metrics for published content."""
@@ -367,5 +393,6 @@ class SchedulerEngine:
             reliability_engine.record_error_and_recover(db, "SchedulerInsightsSync", e)
         finally:
             db.close()
+            trim_process_memory()
 
 scheduler_engine = SchedulerEngine()
