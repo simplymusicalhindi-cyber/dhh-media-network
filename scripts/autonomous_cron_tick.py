@@ -134,28 +134,35 @@ async def main():
 
         post_type = random.choice(["REEL", "MEME"])
 
+        reel_success = False
         if post_type == "REEL":
-            print("[Watchdog] Generating fresh autonomous DHH Reel using fresh template...")
-            reel_hooks = [
-                ("POV: Delhi producer sending unmixed 808s at 4 AM saying 'Bhai loop check kar' 💀", "Every single producer-rapper dynamic in DHH 😭 Who is that one producer friend for you? Drop below! 👇\n\n#DesiHipHop #DHH #SeedheMaut #KR$NA #FLStudio #DHHMemes #IndianHipHop"),
-                ("When the sub-bass drops on an Umair beat and your earphones start vibrating 🔊🚗💀", "No one: \nUmair in the studio: 🔥🔊 What's your favorite beat drop this year? Drop below! 👇\n\n#DesiHipHop #DHH #Umair #TalhaAnjum #SubBass #DHHMemes #IndianHipHop"),
-                ("Hardcore DHH fan explaining how a 12-bar scheme connects to Greek mythology 😭", "Overanalyzing every single KR$NA bar like it's a board exam 💀 Who does this? Drop below 👇\n\n#DesiHipHop #DHH #KR$NA #Awam #Kalamkaar #DHHMemes #IndianHipHop"),
-                ("Walking out of a Seedhe Maut moshpit with 1 missing shoe and 100% peace of mind 🧘‍♂️", "TBS4L or nothing ⚔️ Delhi scene hits different in person. Have you survived an SM moshpit? 👇\n\n#DesiHipHop #DHH #SeedheMaut #TBS4L #LunchBreak #DHHMemes #IndianHipHop"),
-                ("Underground hip hop fan when their favorite artist crosses 50k monthly listeners 🥺", "Yesterday: 'Bhai underrated god hai!' 🥺 Today: 'Commercial ho gaya skip karo' 💀 #DesiHipHop #DHH #UndergroundHipHop #DHHMemes #IndianHipHop")
-            ]
-            hook_text, reel_caption = random.choice(reel_hooks)
-            reel_res = reel_engine.render_autonomous_reel(hook_text)
-            local_path = Path(reel_res["file_path"])
-            repo_path = f"backend/data/media/reels/{reel_res['file_name']}"
-            push_file_to_github(local_path, repo_path, f"Autonomous watchdog reel {reel_res['file_name']}")
-            raw_url = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{repo_path}"
-            
-            print(f"Uploading and publishing reel {reel_res['file_name']} (Template: {reel_res.get('template_title')})...")
-            pub_res = await client.publish_reel(raw_url, reel_caption)
-            print("Reel publish result:", pub_res)
-            if pub_res.get("status") == "PUBLISHED":
-                print(f"SUCCESS: Autonomous watchdog posted Reel live! Link: {pub_res.get('permalink')}")
-        else:
+            try:
+                print("[Watchdog] Generating fresh autonomous DHH Reel using fresh template...")
+                reel_hooks = [
+                    ("POV: Delhi producer sending unmixed 808s at 4 AM saying 'Bhai loop check kar' 💀", "Every single producer-rapper dynamic in DHH 😭 Who is that one producer friend for you? Drop below! 👇\n\n#DesiHipHop #DHH #SeedheMaut #KR$NA #FLStudio #DHHMemes #IndianHipHop"),
+                    ("When the sub-bass drops on an Umair beat and your earphones start vibrating 🔊🚗💀", "No one: \nUmair in the studio: 🔥🔊 What's your favorite beat drop this year? Drop below! 👇\n\n#DesiHipHop #DHH #Umair #TalhaAnjum #SubBass #DHHMemes #IndianHipHop"),
+                    ("Hardcore DHH fan explaining how a 12-bar scheme connects to Greek mythology 😭", "Overanalyzing every single KR$NA bar like it's a board exam 💀 Who does this? Drop below 👇\n\n#DesiHipHop #DHH #KR$NA #Awam #Kalamkaar #DHHMemes #IndianHipHop"),
+                    ("Walking out of a Seedhe Maut moshpit with 1 missing shoe and 100% peace of mind 🧘‍♂️", "TBS4L or nothing ⚔️ Delhi scene hits different in person. Have you survived an SM moshpit? 👇\n\n#DesiHipHop #DHH #SeedheMaut #TBS4L #LunchBreak #DHHMemes #IndianHipHop"),
+                    ("Underground hip hop fan when their favorite artist crosses 50k monthly listeners 🥺", "Yesterday: 'Bhai underrated god hai!' 🥺 Today: 'Commercial ho gaya skip karo' 💀 #DesiHipHop #DHH #UndergroundHipHop #DHHMemes #IndianHipHop")
+                ]
+                hook_text, reel_caption = random.choice(reel_hooks)
+                reel_res = reel_engine.render_autonomous_reel(hook_text)
+                local_path = Path(reel_res["file_path"])
+                repo_path = f"backend/data/media/reels/{reel_res['file_name']}"
+                push_file_to_github(local_path, repo_path, f"Autonomous watchdog reel {reel_res['file_name']}")
+                raw_url = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{repo_path}"
+                
+                print(f"Uploading and publishing reel {reel_res['file_name']} (Template: {reel_res.get('template_title')})...")
+                pub_res = await client.publish_reel(raw_url, reel_caption)
+                print("Reel publish result:", pub_res)
+                if pub_res.get("status") == "PUBLISHED":
+                    print(f"SUCCESS: Autonomous watchdog posted Reel live! Link: {pub_res.get('permalink')}")
+                    reel_success = True
+            except Exception as reel_err:
+                print(f"[Watchdog] Reel generation fallback notice: {reel_err}. Generating Meme instead...")
+                reel_success = False
+
+        if not reel_success:
             # Generate clean meme
             templates_pool = [
                 ("distracted_boyfriend", "DHH fans choosing what to obsess over after a new track drops:", [
