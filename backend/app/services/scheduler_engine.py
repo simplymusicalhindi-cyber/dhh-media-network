@@ -54,13 +54,17 @@ class SchedulerEngine:
                 id="dhh_queue_processor",
                 replace_existing=True
             )
-            # 2. Autonomous generation check (runs every 15 minutes)
-            self.scheduler.add_job(
-                self.autonomous_content_generation_loop,
-                trigger=IntervalTrigger(minutes=15),
-                id="dhh_content_generator",
-                replace_existing=True
-            )
+            # 2. Autonomous generation check (runs every 15 minutes only on non-Render workers)
+            is_render = bool(os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID") or os.getenv("IS_RENDER"))
+            if not is_render:
+                self.scheduler.add_job(
+                    self.autonomous_content_generation_loop,
+                    trigger=IntervalTrigger(minutes=15),
+                    id="dhh_content_generator",
+                    replace_existing=True
+                )
+            else:
+                print("[Scheduler] Running on Render: in-container generation loop disabled to guarantee <120MB RAM stability. Publishing queue is active.", flush=True)
             # 3. Insights and metrics sync (every 2 hours)
             self.scheduler.add_job(
                 self.sync_insights,
