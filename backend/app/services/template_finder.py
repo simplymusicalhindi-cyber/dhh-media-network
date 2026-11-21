@@ -301,6 +301,29 @@ class TemplateFinderService:
         """).fetchone()
         
         if not row:
+            # Auto-seed from committed video templates in directory
+            mp4_files = list(self.templates_dir.glob("*.mp4"))
+            now_str = datetime.now(timezone.utc).isoformat()
+            for mp4 in mp4_files:
+                key = mp4.stem
+                title = f"DHH Template {key}"
+                cdn_url = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/backend/data/media/reel_templates/{mp4.name}"
+                try:
+                    c.execute("""
+                        INSERT INTO reel_templates (template_key, source, title, local_path, github_cdn_url, duration, use_count, created_at)
+                        VALUES (?, 'local_seed', ?, ?, ?, 15.0, 0, ?)
+                    """, (key, title, str(mp4), cdn_url, now_str))
+                except Exception:
+                    pass
+            conn.commit()
+            
+            row = c.execute("""
+                SELECT * FROM reel_templates 
+                ORDER BY use_count ASC, RANDOM() 
+                LIMIT 1
+            """).fetchone()
+
+        if not row:
             conn.close()
             raise RuntimeError("No templates found in reel_templates catalog.")
             
