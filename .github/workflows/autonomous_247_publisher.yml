@@ -11,6 +11,9 @@ concurrency:
   group: dhh-publisher-lock
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   tick:
     name: Autonomous Watchdog & Keep-Alive
@@ -34,6 +37,7 @@ jobs:
 
       - name: Ping Render & Execute Autonomous Watchdog
         env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN || 'EAAQK6xLKfhwBS1ZBpwXNGhAiRUkaSlwYNhwOdRguKeiuyfTAQPsxIIXNeyPn91uJr5RknnnaR9gGb7gwRZA7CzevT71qIB0xMlAjXMd1TUrr6GvFT0TdgKszZBsaEwBEsCVZAzb2gP0VuyzSYWV9zxEs6sL4F0ZBZBd9gxQRLQnx69akihLNY4zZA2xG7Y8mL0LxwNKeDz9' }}
           INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID || '17841419945554575' }}
