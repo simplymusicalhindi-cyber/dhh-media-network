@@ -14,8 +14,16 @@ import asyncio
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 
-import instaloader
-import yt_dlp
+try:
+    import instaloader
+except ImportError:
+    instaloader = None
+
+try:
+    import yt_dlp
+except ImportError:
+    yt_dlp = None
+
 import sqlite3
 
 from backend.app.config import settings
@@ -131,6 +139,10 @@ class TemplateFinderService:
 
     def discover_from_instagram(self, usernames: Optional[List[str]] = None, limit_per_user: int = 3) -> List[Dict[str, Any]]:
         """Scrape fresh vertical reel templates from curated Instagram accounts."""
+        if not instaloader:
+            print("[TemplateFinder] instaloader package not available, skipping Instagram scraping.")
+            return []
+
         if usernames is None:
             usernames = ["templatesays", "desihiphopmemes", "thetemplatess", "allmemetemplates"]
             
@@ -183,6 +195,10 @@ class TemplateFinderService:
 
     def discover_from_youtube_shorts(self, queries: Optional[List[str]] = None, limit_per_query: int = 3) -> List[Dict[str, Any]]:
         """Search and download fresh 9:16 vertical meme video templates from YouTube Shorts."""
+        if not yt_dlp:
+            print("[TemplateFinder] yt_dlp package not available, skipping YouTube scraping.")
+            return []
+
         if queries is None:
             queries = [
                 "dhh meme template shorts",
